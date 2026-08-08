@@ -1,4 +1,11 @@
-import { expect, test, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
+import {
+  expect,
+  test,
+  _electron as electron,
+  type ElectronApplication,
+  type Locator,
+  type Page,
+} from '@playwright/test';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,6 +14,28 @@ import type { CatalogSnapshot } from '../../src/shared/models';
 let electronApp: ElectronApplication;
 let page: Page;
 let userData = '';
+
+async function scrollGridToLastItem(grid: Locator, lastItem: Locator): Promise<void> {
+  await grid.scrollIntoViewIfNeeded();
+  await grid.hover();
+  const initialScrollTop = await grid.evaluate((element) => element.scrollTop);
+  await page.mouse.wheel(0, 480);
+  await expect.poll(() => grid.evaluate((element) => element.scrollTop)).toBeGreaterThan(initialScrollTop);
+
+  await grid.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(lastItem).toBeVisible();
+  await expect
+    .poll(async () => {
+      const [viewportBox, itemBox] = await Promise.all([grid.boundingBox(), lastItem.boundingBox()]);
+      if (!viewportBox || !itemBox) return false;
+      return (
+        itemBox.y >= viewportBox.y && itemBox.y + itemBox.height <= viewportBox.y + viewportBox.height + 1
+      );
+    })
+    .toBe(true);
+}
 
 test.beforeAll(async () => {
   test.setTimeout(120_000);
@@ -137,24 +166,20 @@ for (const viewport of [
     await page.getByRole('link', { name: 'Showcase' }).click();
 
     const titleGrid = page.getByTestId('titles-grid');
-    await titleGrid.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    await expect(page.getByRole('button', { name: /Offline title 355/ })).toBeVisible();
+    await scrollGridToLastItem(titleGrid, page.getByRole('button', { name: /Offline title 355/ }));
 
     await page.getByRole('tab', { name: /Tokens/ }).click();
     const tokenGrid = page.getByTestId('tokens-grid');
-    await tokenGrid.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    await expect(page.getByRole('button', { name: /Offline token 400/ })).toBeVisible();
+    await scrollGridToLastItem(tokenGrid, page.getByRole('button', { name: /Offline token 400/ }));
 
     await page.getByRole('tab', { name: 'Banner' }).click();
     const bannerGrid = page.getByTestId('banners-grid');
-    await bannerGrid.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    await expect(page.getByRole('button', { name: /Offline banner 35/ })).toBeVisible();
+    const lastBanner = page.getByRole('button', { name: /Offline banner 35/ });
+    await scrollGridToLastItem(bannerGrid, lastBanner);
+    const bannerArtwork = lastBanner.getByRole('img');
+    const artworkBox = await bannerArtwork.boundingBox();
+    expect(artworkBox).not.toBeNull();
+    expect(artworkBox!.width / artworkBox!.height).toBeCloseTo(580 / 1480, 1);
   });
 }
 

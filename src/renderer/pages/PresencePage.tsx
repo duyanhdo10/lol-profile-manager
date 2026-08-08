@@ -81,12 +81,14 @@ export function PresencePage() {
             </Text>
           </div>
           <div className={styles.emblem} data-tier={preview.rank?.tier ?? 'UNRANKED'}>
-            {preview.rank && (
-              <img
-                src={catalog?.rankEmblems.find((item) => item.tier === preview.rank?.tier)?.imageUrl}
-                alt=""
-              />
-            )}
+            <div className={styles.previewRankArtwork}>
+              {preview.rank && (
+                <img
+                  src={catalog?.rankEmblems.find((item) => item.tier === preview.rank?.tier)?.imageUrl}
+                  alt=""
+                />
+              )}
+            </div>
             <strong>{preview.rank?.tier ?? t('presence.unranked')}</strong>
             <small>{preview.rank?.division ?? ''}</small>
           </div>
