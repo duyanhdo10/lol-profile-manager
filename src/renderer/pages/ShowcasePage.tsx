@@ -1,4 +1,5 @@
 import {
+  Accordion,
   Badge,
   Button,
   Card,
@@ -7,6 +8,7 @@ import {
   NumberInput,
   Paper,
   Select,
+  SimpleGrid,
   Stack,
   Tabs,
   Text,
@@ -21,7 +23,6 @@ import type { BannerMode, ChallengeShowcase, CrestMode } from '../../shared/mode
 import { VirtualGrid } from '../components/VirtualGrid';
 import { useProfilePreview } from '../hooks/use-profile-preview';
 import { useAppStore } from '../store/app-store';
-import { cssVariables } from '../styles/css-variables';
 import styles from './ShowcasePage.module.css';
 
 const tabs = new Set(['title', 'tokens', 'banner', 'regalia']);
@@ -93,13 +94,8 @@ export function ShowcasePage() {
   ];
 
   return (
-    <Stack gap="md">
-      <Paper
-        className={styles.hero}
-        style={cssVariables({
-          '--showcase-background': preview.banner ? `url("${preview.banner.imageUrl}")` : 'none',
-        })}
-      >
+    <Stack gap="md" className={styles.page}>
+      <Paper className={styles.hero}>
         <div>
           <Text className={styles.eyebrow}>{t('showcase.preview')}</Text>
           <Title order={2}>{preview.title?.name ?? t('showcase.noTitle')}</Title>
@@ -118,12 +114,19 @@ export function ShowcasePage() {
             ))}
           </Group>
         </div>
-        <div className={styles.regaliaCrystal}>
-          <span>{preview.regalia.selectedPrestigeCrest}</span>
-          <Text fw={700}>{t('showcase.crest', { mode: preview.regalia.preferredCrestType })}</Text>
-          <Text size="xs" c="dimmed">
-            {preview.regalia.preferredBannerType}
-          </Text>
+        <div className={styles.heroVisuals}>
+          {preview.banner?.imageUrl && (
+            <img className={styles.heroBanner} src={preview.banner.imageUrl} alt={preview.banner.name} />
+          )}
+          <div className={styles.regaliaCrystal}>
+            <Text size="xs" c="dimmed">
+              {t('showcase.regalia')}
+            </Text>
+            <Text fw={700}>{t(`showcase.${preview.regalia.preferredCrestType}`)}</Text>
+            <Text size="xs" c="dimmed">
+              {t(`showcase.${preview.regalia.preferredBannerType}`)}
+            </Text>
+          </div>
         </div>
       </Paper>
 
@@ -303,7 +306,7 @@ export function ShowcasePage() {
             <VirtualGrid
               items={banners}
               columns={2}
-              rowHeight={112}
+              rowHeight={124}
               getKey={(item) => item.contentId}
               empty={t('showcase.noBanners')}
               fillHeight
@@ -320,7 +323,7 @@ export function ShowcasePage() {
                   }
                   onClick={() => updateShowcase({ bannerAccent: item.id })}
                 >
-                  <Image src={item.imageUrl} alt={item.name} />
+                  <img className={styles.bannerArtwork} src={item.imageUrl} alt={item.name} />
                   <span>
                     <strong>{item.name}</strong>
                     <small>
@@ -331,8 +334,8 @@ export function ShowcasePage() {
               )}
             />
           </Tabs.Panel>
-          <Tabs.Panel value="regalia" pt="xl">
-            <Stack maw={760}>
+          <Tabs.Panel value="regalia" pt="xl" className={styles.regaliaPanel}>
+            <Stack maw={900}>
               <Group justify="space-between">
                 <div>
                   <Text className={styles.eyebrow}>{t('showcase.lcuRegalia')}</Text>
@@ -343,60 +346,65 @@ export function ShowcasePage() {
                 </Badge>
               </Group>
               <Group grow align="flex-start">
-                <Select
-                  label={t('showcase.crestMode')}
-                  value={preview.regalia.preferredCrestType}
-                  data={[
-                    { value: 'prestige', label: t('showcase.prestige') },
-                    { value: 'ranked', label: t('showcase.ranked') },
-                  ]}
-                  onChange={(value) =>
-                    patchDraft({
-                      regalia: { ...preview.regalia, preferredCrestType: (value ?? 'prestige') as CrestMode },
-                    })
-                  }
-                />
-                <Select
-                  label={t('showcase.bannerMode')}
-                  value={preview.regalia.preferredBannerType}
-                  data={[
-                    { value: 'blank', label: t('showcase.blank') },
-                    { value: 'lastSeasonHighestRank', label: t('showcase.lastSeason') },
-                    { value: 'highestRank', label: t('showcase.highest') },
-                  ]}
-                  onChange={(value) =>
-                    patchDraft({
-                      regalia: {
-                        ...preview.regalia,
-                        preferredBannerType: (value ?? 'lastSeasonHighestRank') as BannerMode,
-                      },
-                    })
-                  }
-                />
-                <NumberInput
-                  label={t('showcase.prestigeLevel')}
-                  min={0}
-                  max={255}
-                  value={preview.regalia.selectedPrestigeCrest}
-                  onChange={(value) =>
-                    patchDraft({
-                      regalia: {
-                        ...preview.regalia,
-                        selectedPrestigeCrest: typeof value === 'number' ? value : 0,
-                      },
-                    })
-                  }
-                />
+                <Stack gap={6}>
+                  <Select
+                    label={t('showcase.crestMode')}
+                    value={preview.regalia.preferredCrestType}
+                    data={[
+                      { value: 'prestige', label: t('showcase.prestige') },
+                      { value: 'ranked', label: t('showcase.ranked') },
+                    ]}
+                    onChange={(value) =>
+                      patchDraft({
+                        regalia: {
+                          ...preview.regalia,
+                          preferredCrestType: (value ?? 'prestige') as CrestMode,
+                        },
+                      })
+                    }
+                  />
+                  <Text size="xs" c="dimmed">
+                    {t('showcase.crestModeHelp')}
+                  </Text>
+                </Stack>
+                <Stack gap={6}>
+                  <Select
+                    label={t('showcase.bannerMode')}
+                    value={preview.regalia.preferredBannerType}
+                    data={[
+                      { value: 'blank', label: t('showcase.blank') },
+                      { value: 'lastSeasonHighestRank', label: t('showcase.lastSeason') },
+                      { value: 'highestRank', label: t('showcase.highest') },
+                    ]}
+                    onChange={(value) =>
+                      patchDraft({
+                        regalia: {
+                          ...preview.regalia,
+                          preferredBannerType: (value ?? 'lastSeasonHighestRank') as BannerMode,
+                        },
+                      })
+                    }
+                  />
+                  <Text size="xs" c="dimmed">
+                    {t('showcase.bannerModeHelp')}
+                  </Text>
+                </Stack>
               </Group>
               <Text size="xs" c="dimmed">
                 {t('showcase.regaliaNote')}
               </Text>
-              <Group grow>
+              <SimpleGrid cols={{ base: 1, sm: 2 }}>
                 <Paper p="md" withBorder>
                   <Text size="xs" c="dimmed">
                     {t('showcase.resolvedCrest')}
                   </Text>
-                  <Text fw={700}>{preview.regaliaContext.resolvedCrest}</Text>
+                  <Text fw={700}>{t(`showcase.${preview.regaliaContext.resolvedCrest}`)}</Text>
+                </Paper>
+                <Paper p="md" withBorder>
+                  <Text size="xs" c="dimmed">
+                    {t('showcase.resolvedBanner')}
+                  </Text>
+                  <Text fw={700}>{t(`showcase.${preview.regaliaContext.resolvedBanner}`)}</Text>
                 </Paper>
                 <Paper p="md" withBorder>
                   <Text size="xs" c="dimmed">
@@ -413,10 +421,33 @@ export function ShowcasePage() {
                     {preview.regaliaContext.lastSeasonHighestRank ?? t('presence.unranked')}
                   </Text>
                 </Paper>
-              </Group>
-              <Text size="xs" c="dimmed">
-                {t('showcase.prestigeLevelNote')}
-              </Text>
+              </SimpleGrid>
+              <Accordion variant="contained" className={styles.advancedRegalia}>
+                <Accordion.Item value="prestige-code">
+                  <Accordion.Control>{t('showcase.advanced')}</Accordion.Control>
+                  <Accordion.Panel>
+                    <Stack gap="xs">
+                      <NumberInput
+                        label={t('showcase.prestigeLevel')}
+                        min={0}
+                        max={255}
+                        value={preview.regalia.selectedPrestigeCrest}
+                        onChange={(value) =>
+                          patchDraft({
+                            regalia: {
+                              ...preview.regalia,
+                              selectedPrestigeCrest: typeof value === 'number' ? value : 0,
+                            },
+                          })
+                        }
+                      />
+                      <Text size="xs" c="dimmed">
+                        {t('showcase.prestigeLevelNote')}
+                      </Text>
+                    </Stack>
+                  </Accordion.Panel>
+                </Accordion.Item>
+              </Accordion>
               {draft.regalia && (
                 <Button variant="light" color="gray" w="fit-content" onClick={() => clearField('regalia')}>
                   {t('showcase.keepRegalia')}

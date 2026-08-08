@@ -17,16 +17,30 @@
 }
 
 .emblem {
-  min-width: 154px;
+  min-width: 210px;
   display: grid;
   justify-items: center;
   gap: 3px;
 }
 
-.emblem img {
-  width: 98px;
-  height: 98px;
-  object-fit: contain;
+.previewRankArtwork,
+.rankArtwork {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.previewRankArtwork {
+  width: 210px;
+  height: 150px;
+}
+
+.previewRankArtwork img,
+.rankArtwork img {
+  width: 680px;
+  max-width: none;
+  height: auto;
   filter: drop-shadow(0 12px 18px rgb(0 0 0 / 42%));
 }
 
@@ -52,17 +66,8 @@
 }
 
 .rankArtwork {
-  height: 126px;
-  display: grid;
-  place-items: center;
+  height: 176px;
   margin: 12px 0;
-}
-
-.rankArtwork img {
-  width: 126px;
-  height: 126px;
-  object-fit: contain;
-  filter: drop-shadow(0 14px 20px rgb(0 0 0 / 46%));
 }
 
 .rankArtwork span {

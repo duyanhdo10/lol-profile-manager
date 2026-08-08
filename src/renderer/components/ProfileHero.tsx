@@ -64,7 +64,6 @@ export function ProfileHero({
       className={styles.hero}
       style={cssVariables({
         '--hero-background': backgroundUrl ? `url("${backgroundUrl}")` : 'none',
-        '--hero-banner': bannerUrl ? `url("${bannerUrl}")` : 'none',
       })}
     >
       <div className={styles.topBar}>
@@ -107,7 +106,9 @@ export function ProfileHero({
                 className={styles.rankCard}
                 data-active={activeRankQueue === queue || undefined}
               >
-                {emblem?.imageUrl ? <img src={emblem.imageUrl} alt="" /> : <span>—</span>}
+                <div className={styles.rankEmblemCrop}>
+                  {emblem?.imageUrl ? <img src={emblem.imageUrl} alt="" /> : <span>—</span>}
+                </div>
                 <div>
                   <Text size="xs" c="dimmed">
                     {queueNames[queue]}
@@ -121,15 +122,19 @@ export function ProfileHero({
           })}
         </div>
         <div className={styles.regalia}>
-          <Text size="xs" c="dimmed">
-            {t('showcase.regalia')}
-          </Text>
-          <Text size="sm" fw={700}>
-            {regaliaContext.resolvedCrest} · {regaliaContext.resolvedBanner}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {t('showcase.prestigeCode', { code: regalia.selectedPrestigeCrest })}
-          </Text>
+          {bannerUrl && <img className={styles.profileBanner} src={bannerUrl} alt="" />}
+          <div>
+            <Text size="xs" c="dimmed">
+              {t('showcase.regalia')}
+            </Text>
+            <Text size="sm" fw={700}>
+              {t(`showcase.${regaliaContext.resolvedCrest}`)} ·{' '}
+              {t(`showcase.${regaliaContext.resolvedBanner}`)}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t('showcase.prestigeCode', { code: regalia.selectedPrestigeCrest })}
+            </Text>
+          </div>
         </div>
       </div>
     </Paper>

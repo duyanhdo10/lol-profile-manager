@@ -12,6 +12,13 @@ export function useProfilePreview() {
     const backgroundSkinId = draft.backgroundSkinId ?? current.backgroundSkinId;
     const showcase: ChallengeShowcase = { ...current.challengeShowcase, ...draft.challengeShowcase };
     const regalia = draft.regalia ?? current.regalia;
+    const regaliaContext = draft.regalia
+      ? {
+          ...current.regaliaContext,
+          resolvedCrest: draft.regalia.preferredCrestType,
+          resolvedBanner: draft.regalia.preferredBannerType,
+        }
+      : current.regaliaContext;
     return {
       icon: catalog?.icons.find((item) => item.id === iconId),
       background: catalog?.backgrounds.find((item) => item.id === backgroundSkinId),
@@ -33,7 +40,7 @@ export function useProfilePreview() {
         : current.rankedQueues,
       activeRankQueue: draft.rank?.activeQueue ?? current.rank?.queue ?? null,
       identity: current.identity,
-      regaliaContext: current.regaliaContext,
+      regaliaContext,
     };
   }, [catalog, current, draft]);
 }

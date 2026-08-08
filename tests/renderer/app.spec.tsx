@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { MantineProvider } from '@mantine/core';
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, render, renderHook, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CatalogSnapshot, LcuBridge } from '../../src/shared/models';
 import { EMPTY_PROFILE } from '../../src/shared/models';
 import { AppRouter } from '../../src/renderer/app/AppRouter';
+import { useProfilePreview } from '../../src/renderer/hooks/use-profile-preview';
 import { resetAppStoreCoordinatorsForTests, useAppStore } from '../../src/renderer/store/app-store';
 
 const catalog: CatalogSnapshot = {
@@ -149,6 +150,40 @@ describe('React application shell', () => {
     useAppStore.setState({ draft: { iconId: 7, challengeShowcase: { tokenIds: [1, 2, 3] } } });
     useAppStore.getState().clearField('challengeShowcase');
     expect(useAppStore.getState().draft).toEqual({ iconId: 7 });
+  });
+
+  it('resolves the regalia preview from the draft immediately', () => {
+    useAppStore.setState({
+      current: {
+        ...structuredClone(EMPTY_PROFILE),
+        regalia: {
+          preferredCrestType: 'prestige',
+          preferredBannerType: 'blank',
+          selectedPrestigeCrest: 11,
+        },
+        regaliaContext: {
+          resolvedCrest: 'prestige',
+          resolvedBanner: 'blank',
+          accountLevel: 261,
+          highestRank: 'GOLD',
+          lastSeasonHighestRank: 'PLATINUM',
+        },
+      },
+      draft: {
+        regalia: {
+          preferredCrestType: 'ranked',
+          preferredBannerType: 'highestRank',
+          selectedPrestigeCrest: 11,
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useProfilePreview());
+    expect(result.current.regaliaContext).toMatchObject({
+      resolvedCrest: 'ranked',
+      resolvedBanner: 'highestRank',
+      accountLevel: 261,
+    });
   });
 
   it('asks for confirmation before restarting when a profile draft exists', async () => {
