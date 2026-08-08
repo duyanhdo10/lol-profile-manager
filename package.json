@@ -1,7 +1,7 @@
 {
   "name": "lol-profile-manager",
   "productName": "LoL Profile Manager",
-  "version": "0.1.0-beta.5",
+  "version": "0.1.0-beta.6",
   "description": "A secure Windows profile and social appearance manager for the League Client",
   "author": "LoL Profile Manager contributors",
   "license": "MIT",
