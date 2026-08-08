@@ -104,7 +104,8 @@ Do not claim a check passed unless it was actually run. Report any check that co
 
 The generated `release/`, `dist/`, and `dist-electron/` contents are build outputs and must not be committed.
 Never replace an asset from an existing release. Installed versions starting at v0.1.0-beta.3 discover future
-releases through `electron-updater`; earlier versions require one manual installer upgrade.
+releases through `electron-updater` starting with v0.1.0-beta.4; earlier versions require one manual installer
+upgrade.
 
 The updater is enabled only in packaged builds and can be disabled with `LPM_DISABLE_UPDATER=1` for E2E. It
 downloads automatically but must keep `autoInstallOnAppQuit` disabled and install only after explicit user

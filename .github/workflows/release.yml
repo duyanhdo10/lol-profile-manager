@@ -44,12 +44,21 @@ jobs:
       - name: Run Electron end-to-end tests
         run: npm run test:e2e
 
-      - name: Build and upload update artifacts to draft
-        run: npm exec electron-builder -- --win --x64 --publish always
+      - name: Build update artifacts
+        run: npm run package
+
+      - name: Create draft release
+        shell: pwsh
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            --draft `
+            --verify-tag `
+            --title "LoL Profile Manager $env:GITHUB_REF_NAME" `
+            --notes-file "release-notes/$env:GITHUB_REF_NAME.md"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Validate update artifacts
+      - name: Upload update artifacts
         shell: pwsh
         run: |
           $version = node -p "require('./package.json').version"
@@ -63,6 +72,32 @@ jobs:
               throw "Missing update artifact: $artifact"
             }
           }
+          gh release upload $env:GITHUB_REF_NAME @expected
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate draft assets on GitHub
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          $expectedNames = @(
+            "LoL-Profile-Manager-Setup-$version.exe",
+            "LoL-Profile-Manager-Setup-$version.exe.blockmap",
+            "latest.yml"
+          )
+          $release = gh release view $env:GITHUB_REF_NAME --json assets | ConvertFrom-Json
+          $assets = @($release.assets)
+          foreach ($expectedName in $expectedNames) {
+            $asset = $assets | Where-Object name -EQ $expectedName
+            if (-not $asset -or $asset.size -le 0) {
+              throw "Missing or empty GitHub release asset: $expectedName"
+            }
+          }
+          if ($assets.Count -ne $expectedNames.Count) {
+            throw "Unexpected GitHub release asset count: $($assets.Count)"
+          }
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish official latest release
         shell: pwsh
@@ -72,5 +107,19 @@ jobs:
             --prerelease=false `
             --latest `
             --notes-file "release-notes/$env:GITHUB_REF_NAME.md"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify published latest release
+        shell: pwsh
+        run: |
+          $release = gh release view $env:GITHUB_REF_NAME --json isDraft,isPrerelease | ConvertFrom-Json
+          if ($release.isDraft -or $release.isPrerelease) {
+            throw "Release was not published as an official release."
+          }
+          $latestTag = gh api "repos/$env:GITHUB_REPOSITORY/releases/latest" --jq .tag_name
+          if ($latestTag -ne $env:GITHUB_REF_NAME) {
+            throw "Published release is not Latest: $latestTag"
+          }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

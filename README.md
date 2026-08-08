@@ -46,7 +46,7 @@ Transient status and hovercard values are never reapplied automatically after re
 
 ### Automatic updates
 
-Starting with v0.1.0-beta.3, the packaged app checks GitHub Releases shortly after launch. You can also check
+Starting with v0.1.0-beta.4, the packaged app checks GitHub Releases shortly after launch. You can also check
 manually from the sidebar. A new installer downloads in the background, but the app never restarts or installs
 it without an explicit action. If a profile draft or review is open, the restart confirmation warns that those
 pending selections will be lost.
@@ -132,7 +132,7 @@ và hạng hovercard tạm thời không bao giờ được tự động áp d�
 
 ### Cập nhật tự động
 
-Từ v0.1.0-beta.3, bản ứng dụng đã đóng gói sẽ kiểm tra GitHub Releases ngay sau khi mở. Bạn cũng có thể kiểm
+Từ v0.1.0-beta.4, bản ứng dụng đã đóng gói sẽ kiểm tra GitHub Releases ngay sau khi mở. Bạn cũng có thể kiểm
 tra thủ công từ thanh bên. Bộ cài mới được tải trong nền, nhưng ứng dụng không tự khởi động lại hoặc cài đặt
 nếu chưa có thao tác xác nhận. Khi đang có bản nháp hoặc cửa sổ kiểm tra, hộp thoại khởi động lại sẽ cảnh báo
 rằng các lựa chọn chưa áp dụng sẽ bị mất.
