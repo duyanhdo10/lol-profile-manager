@@ -176,12 +176,13 @@ describe('React application shell', () => {
       });
     });
 
-    const restartButtons = await screen.findAllByRole('button', { name: 'Restart and update' });
-    await user.click(restartButtons[0]);
-    expect(screen.getAllByRole('heading', { name: 'Restart to update?' })).not.toHaveLength(0);
+    const readyAlert = await screen.findByRole('alert', { name: 'Update ready to install' });
+    await user.click(within(readyAlert).getByRole('button', { name: 'Restart and update' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByRole('heading', { name: 'Restart to update?' })).toBeInTheDocument();
     expect(lpm.installUpdate).not.toHaveBeenCalled();
 
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Restart and update' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Restart and update' }));
     await waitFor(() => expect(lpm.installUpdate).toHaveBeenCalledTimes(1));
   });
 });
