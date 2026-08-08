@@ -1,153 +1,161 @@
 <p align="center">
-  <img src="src/assets/logo.png" alt="Logo LoL Profile Manager" width="180" />
+  <img src="src/assets/logo.png" alt="LoL Profile Manager logo" width="180" />
 </p>
 
 <h1 align="center">LoL Profile Manager</h1>
 
 <p align="center">
   <a href="https://github.com/duyanhdo10/lol-profile-manager/actions/workflows/ci.yml"><img src="https://github.com/duyanhdo10/lol-profile-manager/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="https://github.com/duyanhdo10/lol-profile-manager/releases"><img src="https://img.shields.io/github/v/release/duyanhdo10/lol-profile-manager?include_prereleases" alt="Phiên bản" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/duyanhdo10/lol-profile-manager" alt="Giấy phép MIT" /></a>
+  <a href="https://github.com/duyanhdo10/lol-profile-manager/releases"><img src="https://img.shields.io/github/v/release/duyanhdo10/lol-profile-manager?include_prereleases" alt="Latest release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/duyanhdo10/lol-profile-manager" alt="MIT license" /></a>
 </p>
 
 <p align="center">
-  Ứng dụng desktop mã nguồn mở giúp xem trước và quản lý diện mạo hồ sơ League of Legends trên Windows.
+  <a href="#english">English</a> · <a href="#tiếng-việt">Tiếng Việt</a>
 </p>
 
+---
+
+## English
+
+LoL Profile Manager is an open-source Windows desktop application for previewing, reviewing, and applying
+League Client social-profile appearance changes.
+
 > [!WARNING]
-> Dự án đang ở giai đoạn **Beta**. Ứng dụng sử dụng LCU — API cục bộ không được Riot Games hỗ trợ
-> chính thức và có thể thay đổi sau mỗi bản cập nhật League Client.
+> The application uses LCU, a local API that is not officially supported by Riot Games and may change with a
+> League Client update.
 
-## Giới thiệu
+### Features
 
-LoL Profile Manager kết nối trực tiếp với League Client đang chạy trên máy để đọc hồ sơ, tạo bản xem
-trước và áp dụng các thay đổi về diện mạo xã hội. Trước khi ghi dữ liệu, ứng dụng luôn hiển thị toàn bộ
-giao dịch để người dùng kiểm tra.
+- Browse profile icons and champion skin splash backgrounds from CommunityDragon.
+- Build a showcase with a challenge title, up to three ordered challenge tokens, and a challenge banner.
+- Configure profile regalia separately from showcase banners.
+- View real Solo/Duo, Flex, and TFT rank snapshots with CommunityDragon ranked emblems.
+- Edit all three rank displays while choosing exactly one queue to publish to the hovercard.
+- Preview the current and proposed profile in a Riot-style overview before applying.
+- Review a six-step transaction: background → icon → showcase → regalia → status → rank.
+- Stop on the first failed step and roll completed steps back in reverse order.
+- Browse a cache-first catalog offline with patch, ownership, compatibility, and locale-fallback indicators.
+- Use English or Vietnamese without losing ID-based draft selections.
 
-Ứng dụng không mua, mở khóa hoặc cấp quyền sở hữu bất kỳ nội dung nào. Vật phẩm chưa sở hữu vẫn có thể
-được chọn để thử, nhưng League Client có quyền từ chối khi áp dụng.
+The application does not purchase, unlock, or grant ownership of content, and it never changes gameplay or
+ranked progression. Unowned items remain available for preview, but the League Client may reject them.
+Transient status and hovercard values are never reapplied automatically after reconnecting.
 
-## Tính năng
+### Requirements and development
 
-- Duyệt và xem trước biểu tượng hồ sơ cùng ảnh nền trang phục tướng.
-- Tạo Showcase từ danh hiệu thử thách, tối đa ba token có thứ tự, banner và regalia.
-- Chỉnh tin nhắn trạng thái và diện mạo hạng hiển thị trên hovercard.
-- Xem trước hồ sơ hiện tại và bản nháp trước khi áp dụng.
-- Giao dịch sáu bước có rollback: dừng tại lỗi đầu tiên và hoàn tác các bước đã hoàn thành theo thứ tự
-  ngược.
-- Theo dõi ownership và ghi nhớ vật phẩm từng bị đúng phiên bản League Client từ chối.
-- Catalog CommunityDragon cache-first, vẫn duyệt được khi ngoại tuyến và tự cảnh báo khi cache cũ hoặc
-  sai patch.
-- Metadata catalog bằng tiếng Việt với fallback riêng từng tệp sang tiếng Anh.
-- Chuyển ngôn ngữ `Tự động / Tiếng Việt / English`; chế độ Tự động đọc locale của League Client.
-- Không tự động áp dụng lại thay đổi sau khi League Client kết nối lại.
-
-## Yêu cầu
-
-- Windows 64-bit.
-- League of Legends và League Client đã cài đặt. Không cần mở client nếu chỉ duyệt cache có sẵn.
-- Để phát triển: Node.js `24.18.x` và npm `11` trở lên.
-
-## Chạy dự án
+- Windows x64.
+- League of Legends and the League Client. A running client is only required for a live read or apply.
+- For development: Node.js 24.18.x and npm 11 or newer.
 
 ```powershell
 npm ci
 npm run dev
 ```
 
-Vite phục vụ renderer tại `127.0.0.1`, sau đó Electron biên dịch main process và mở ứng dụng desktop.
+If PowerShell blocks npm.ps1, use npm.cmd. The main project commands are:
 
-### Build và đóng gói
+| Command               | Purpose                                                 |
+| --------------------- | ------------------------------------------------------- |
+| npm run format        | Format source and configuration files                   |
+| npm run lint          | Run ESLint for TypeScript and React                     |
+| npm run lint:css      | Run Stylelint for CSS Modules                           |
+| npm run typecheck     | Type-check renderer and Electron code                   |
+| npm test              | Run unit, integration, and renderer tests               |
+| npm run test:e2e      | Build and run Electron end-to-end tests                 |
+| npm run verify        | Run the verification pipeline and production build      |
+| npm run package       | Create the Windows x64 NSIS installer in release/       |
+| npm run audit:runtime | Check runtime dependencies for critical vulnerabilities |
 
-```powershell
-# Build Electron và renderer production
-npm run build
-
-# Tạo bộ cài NSIS Windows x64 trong thư mục release/
-npm run package
-```
-
-## Các lệnh hữu ích
-
-| Lệnh                    | Mục đích                                                     |
-| ----------------------- | ------------------------------------------------------------ |
-| `npm run dev`           | Chạy ứng dụng ở chế độ phát triển                            |
-| `npm run format`        | Format TypeScript, JSX, CSS và các tệp cấu hình              |
-| `npm run lint`          | Kiểm tra TypeScript/React bằng ESLint                        |
-| `npm run lint:css`      | Kiểm tra CSS Modules bằng Stylelint                          |
-| `npm run typecheck`     | Kiểm tra TypeScript cho renderer và Electron                 |
-| `npm test`              | Chạy unit, integration và renderer tests                     |
-| `npm run test:e2e`      | Build và chạy Electron E2E bằng Playwright                   |
-| `npm run verify`        | Chạy format check, lint, typecheck, test và production build |
-| `npm run audit:runtime` | Kiểm tra lỗ hổng critical trong dependency runtime           |
-| `npm run package`       | Tạo bộ cài Windows x64                                       |
-
-## Kiến trúc
+### Architecture and security
 
 ```text
-electron/
-  main.ts                 Composition root và cấu hình cửa sổ bảo mật
-  ipc-registration.ts     Đăng ký IPC và chuẩn hóa lỗi
-  lcu-client.ts           Kết nối, theo dõi và giao tiếp với League Client
-  catalog-service.ts      Tải, chuẩn hóa, cache và localized fallback catalog
-  apply-service.ts        Preview, apply và rollback giao dịch hồ sơ
-
-src/shared/models/        Contract dùng chung giữa main, preload và renderer
-src/renderer/
-  app/                    Router, layout và Mantine theme
-  features/settings/      Preference ngôn ngữ và i18n
-  pages/                  Các màn hình chỉnh sửa hồ sơ
-  store/                  Lifecycle, catalog, draft và apply state
-
-tests/
-  unit/                   Validation, locale, catalog/cache và migration
-  integration/            Giao dịch apply/rollback
-  renderer/               React UI và lifecycle
-  e2e/                    Ứng dụng Electron hoàn chỉnh
+electron/                 Secure main process, LCU, catalog, IPC, apply and rollback
+src/shared/models/        Contracts shared by main, preload, renderer and tests
+src/renderer/             React UI, i18n, pages, lifecycle and Zustand state
+tests/                    Unit, integration, renderer and Electron E2E suites
 ```
 
-Renderer được viết bằng React, Mantine, Zustand và TypeScript. Mọi quyền truy cập LCU, filesystem và
-CommunityDragon đều nằm trong Electron main process và chỉ được cung cấp qua preload bridge có kiểu dữ
-liệu rõ ràng.
+The renderer runs with Node integration disabled, context isolation enabled, and Chromium sandboxing enabled.
+LCU credentials, filesystem access, and remote network access remain in the Electron main process. The
+renderer communicates only through the typed preload bridge. Remote images are allowlisted and proxied from
+raw.communitydragon.org; the application has no telemetry.
 
-## Bảo mật và dữ liệu
+Catalog names, descriptions, and artwork come from
+[CommunityDragon](https://communitydragon.org/). Artwork uses global/default; Vietnamese metadata uses
+global/vi_vn with per-file fallback to English.
 
-- Tắt Node integration; bật context isolation và Chromium sandbox trong renderer.
-- Kiểm tra nguồn gửi IPC và chỉ công khai các thao tác hồ sơ đã định nghĩa trước.
-- Credential LCU chỉ được đọc cục bộ từ lockfile, giữ trong main process và không chuyển sang renderer.
-- Ảnh từ xa chỉ được proxy từ allowlist `raw.communitydragon.org`.
-- Content Security Policy chặn script, frame, form và kết nối mạng không được phép.
-- Catalog cache, compatibility records và log chẩn đoán được lưu trong thư mục `userData` của Electron.
-- Log được giới hạn dung lượng; ứng dụng không có telemetry và không gửi dữ liệu hồ sơ tới máy chủ của
-  dự án.
+LoL Profile Manager is a community project and is not developed, sponsored, or endorsed by Riot Games.
+League of Legends and Riot Games are trademarks of Riot Games, Inc. Released under the [MIT License](LICENSE).
 
-## Nguồn dữ liệu
+---
 
-Tên, mô tả và asset catalog được lấy từ
-[CommunityDragon](https://communitydragon.org/). Ảnh luôn dùng asset `global/default`; metadata tiếng
-Việt dùng `global/vi_vn` và tự fallback sang English nếu một tệp localized không khả dụng.
+## Tiếng Việt
 
-## Giới hạn hiện tại
+LoL Profile Manager là ứng dụng desktop mã nguồn mở cho Windows, giúp xem trước, kiểm tra và áp dụng các thay
+đổi về diện mạo hồ sơ xã hội trong League Client.
 
-- Chỉ hỗ trợ Windows x64.
-- Chỉ dịch đầy đủ tiếng Việt và tiếng Anh.
-- Chưa có preset, lịch sử giao dịch, purchase history, diagnostics UI hoặc API request tùy ý.
-- Status, rank hovercard và một số diện mạo xã hội có thể bị League Client đặt lại.
-- Cache thuộc patch khác chỉ dùng để duyệt; Apply sẽ bị khóa cho đến khi có snapshot phù hợp.
+> [!WARNING]
+> Ứng dụng sử dụng LCU, một API cục bộ không được Riot Games hỗ trợ chính thức và có thể thay đổi sau mỗi bản
+> cập nhật League Client.
 
-## Đóng góp
+### Tính năng
 
-1. Fork repository và tạo branch cho thay đổi của bạn.
-2. Cài dependency bằng `npm ci`.
-3. Chạy `npm run verify` và `npm run test:e2e` trước khi tạo pull request.
-4. Mô tả rõ hành vi LCU bị ảnh hưởng và cách đã kiểm thử.
+- Duyệt biểu tượng hồ sơ và ảnh nền splash trang phục tướng từ CommunityDragon.
+- Tạo Showcase gồm danh hiệu thử thách, tối đa ba token có thứ tự và banner thử thách.
+- Cấu hình regalia hồ sơ độc lập với banner Showcase.
+- Xem hạng thật của Đơn/Đôi, Linh Hoạt và ĐTCL bằng huy hiệu hạng từ CommunityDragon.
+- Chỉnh cả ba hạng trong bản nháp nhưng chỉ chọn đúng một hàng chờ để hiển thị trên hovercard.
+- So sánh hồ sơ hiện tại và sau thay đổi bằng bản xem trước phong cách Riot.
+- Kiểm tra giao dịch sáu bước: ảnh nền → biểu tượng → Showcase → regalia → trạng thái → hạng.
+- Dừng ở lỗi đầu tiên và hoàn tác các bước đã hoàn thành theo thứ tự ngược.
+- Duyệt catalog cache-first khi ngoại tuyến, kèm trạng thái patch, sở hữu, tương thích và fallback ngôn ngữ.
+- Dùng tiếng Anh hoặc tiếng Việt mà không mất lựa chọn bản nháp theo ID.
 
-## Tuyên bố miễn trừ trách nhiệm
+Ứng dụng không mua, mở khóa hoặc cấp quyền sở hữu nội dung, đồng thời không thay đổi gameplay hay tiến trình
+xếp hạng. Vật phẩm chưa sở hữu vẫn có thể xem trước nhưng League Client có thể từ chối khi áp dụng. Trạng thái
+và hạng hovercard tạm thời không bao giờ được tự động áp dụng lại sau khi kết nối lại.
 
-LoL Profile Manager là dự án cộng đồng, không được Riot Games phát triển, tài trợ hoặc chứng thực.
-League of Legends và Riot Games là nhãn hiệu của Riot Games, Inc. Việc sử dụng ứng dụng hoàn toàn do
-người dùng tự chịu trách nhiệm.
+### Yêu cầu và phát triển
 
-## Giấy phép
+- Windows x64.
+- League of Legends và League Client. Chỉ cần mở client khi đọc hoặc áp dụng hồ sơ trực tiếp.
+- Để phát triển: Node.js 24.18.x và npm 11 trở lên.
 
-Dự án được phát hành theo giấy phép [MIT](LICENSE).
+```powershell
+npm ci
+npm run dev
+```
+
+Nếu PowerShell chặn npm.ps1, hãy dùng npm.cmd. Các lệnh chính:
+
+| Lệnh                  | Mục đích                                               |
+| --------------------- | ------------------------------------------------------ |
+| npm run format        | Định dạng source và tệp cấu hình                       |
+| npm run lint          | Chạy ESLint cho TypeScript và React                    |
+| npm run lint:css      | Chạy Stylelint cho CSS Modules                         |
+| npm run typecheck     | Kiểm tra kiểu dữ liệu renderer và Electron             |
+| npm test              | Chạy unit, integration và renderer tests               |
+| npm run test:e2e      | Build và chạy Electron end-to-end tests                |
+| npm run verify        | Chạy pipeline kiểm tra và production build             |
+| npm run package       | Tạo bộ cài NSIS Windows x64 trong release/             |
+| npm run audit:runtime | Kiểm tra lỗ hổng nghiêm trọng trong dependency runtime |
+
+### Kiến trúc và bảo mật
+
+```text
+electron/                 Main process bảo mật, LCU, catalog, IPC, apply và rollback
+src/shared/models/        Contract dùng chung cho main, preload, renderer và test
+src/renderer/             React UI, i18n, trang, lifecycle và Zustand state
+tests/                    Unit, integration, renderer và Electron E2E
+```
+
+Renderer tắt Node integration, bật context isolation và Chromium sandbox. Credential LCU, filesystem và truy
+cập mạng từ xa luôn nằm trong Electron main process. Renderer chỉ giao tiếp qua preload bridge có kiểu dữ
+liệu. Ảnh từ xa chỉ được proxy qua allowlist raw.communitydragon.org; ứng dụng không có telemetry.
+
+Tên, mô tả và artwork catalog đến từ [CommunityDragon](https://communitydragon.org/). Artwork dùng
+global/default; metadata tiếng Việt dùng global/vi_vn và fallback riêng từng tệp sang tiếng Anh.
+
+LoL Profile Manager là dự án cộng đồng, không do Riot Games phát triển, tài trợ hoặc chứng thực. League of
+Legends và Riot Games là nhãn hiệu của Riot Games, Inc. Dự án phát hành theo [Giấy phép MIT](LICENSE).

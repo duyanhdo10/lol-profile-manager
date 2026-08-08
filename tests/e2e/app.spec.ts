@@ -12,7 +12,7 @@ test.beforeAll(async () => {
   test.setTimeout(120_000);
   userData = await mkdtemp(path.join(os.tmpdir(), 'lpm-e2e-'));
   const snapshot: CatalogSnapshot = {
-    schemaVersion: 4,
+    schemaVersion: 5,
     version: '16.15.8024387+branch.release',
     patch: '16.15',
     fetchedAt: new Date().toISOString(),
@@ -37,41 +37,47 @@ test.beforeAll(async () => {
       },
     ],
     backgrounds: [],
-    titles: [
+    titles: Array.from({ length: 355 }, (_, index) => ({
+      contentId: `title-${index + 1}`,
+      itemId: 10_000 + index,
+      name: `Offline title ${index + 1}`,
+      imageUrl: '',
+      source: 'CommunityDragon',
+      sourceVersion: '16.15',
+      ownership: 'unowned',
+      compatibility: 'unknown',
+      visibility: ['Profile/hovercard'],
+      tier: 'GOLD',
+      category: 'Imagination',
+    })),
+    tokens: Array.from({ length: 400 }, (_, index) => ({
+      id: 20_000 + index,
+      name: `Offline token ${index + 1}`,
+      imageUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBA==',
+      source: 'CommunityDragon',
+      sourceVersion: '16.15',
+      ownership: 'unknown',
+      compatibility: 'unknown',
+      visibility: ['Profile/hovercard'],
+      tier: 'GOLD',
+      category: 'Imagination',
+    })),
+    regalia: Array.from({ length: 35 }, (_, index) => ({
+      id: String(index + 1),
+      contentId: `banner-${index + 1}`,
+      regaliaType: 'kBanner',
+      name: `Offline banner ${index + 1}`,
+      imageUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBA==',
+      source: 'CommunityDragon',
+      sourceVersion: '16.15',
+      ownership: 'unknown',
+      compatibility: 'unknown',
+      visibility: ['Profile/hovercard'],
+    })),
+    rankEmblems: [
       {
-        contentId: 'title-one',
-        itemId: 10103,
-        name: 'Offline title',
-        imageUrl: '',
-        source: 'CommunityDragon',
-        sourceVersion: '16.15',
-        ownership: 'unowned',
-        compatibility: 'unknown',
-        visibility: ['Profile/hovercard'],
         tier: 'GOLD',
-        category: 'Imagination',
-      },
-    ],
-    tokens: [
-      {
-        id: 101,
-        name: 'Offline token',
-        imageUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBA==',
-        source: 'CommunityDragon',
-        sourceVersion: '16.15',
-        ownership: 'unknown',
-        compatibility: 'unknown',
-        visibility: ['Profile/hovercard'],
-        tier: 'GOLD',
-        category: 'Imagination',
-      },
-    ],
-    regalia: [
-      {
-        id: '3',
-        contentId: 'banner-three',
-        regaliaType: 'kBanner',
-        name: 'Offline banner',
+        name: 'Gold ranked emblem',
         imageUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBA==',
         source: 'CommunityDragon',
         sourceVersion: '16.15',
@@ -119,6 +125,36 @@ test('starts with one hardened React window and a typed bridge', async () => {
   await expect(page.getByRole('heading', { name: 'Profile overview' })).toBeVisible();
 });
 
+for (const viewport of [
+  { width: 1920, height: 991 },
+  { width: 1080, height: 720 },
+]) {
+  test(`showcase grids reach their last item at ${viewport.width}x${viewport.height}`, async () => {
+    await page.setViewportSize(viewport);
+    await page.getByRole('link', { name: 'Showcase' }).click();
+
+    const titleGrid = page.getByTestId('titles-grid');
+    await titleGrid.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    await expect(page.getByRole('button', { name: /Offline title 355/ })).toBeVisible();
+
+    await page.getByRole('tab', { name: /Tokens/ }).click();
+    const tokenGrid = page.getByTestId('tokens-grid');
+    await tokenGrid.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    await expect(page.getByRole('button', { name: /Offline token 400/ })).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Banner' }).click();
+    const bannerGrid = page.getByTestId('banners-grid');
+    await bannerGrid.evaluate((element) => {
+      element.scrollTop = element.scrollHeight;
+    });
+    await expect(page.getByRole('button', { name: /Offline banner 35/ })).toBeVisible();
+  });
+}
+
 test('browses an offline icon catalog and keeps unknown items selectable', async () => {
   await page.getByRole('link', { name: 'Profile icon' }).click();
   const item = page.getByRole('button', { name: /Offline icon/ });
@@ -130,13 +166,13 @@ test('browses an offline icon catalog and keeps unknown items selectable', async
 
 test('uses routed Showcase tabs and allows unknown assets', async () => {
   await page.getByRole('link', { name: 'Showcase' }).click();
-  const title = page.getByRole('button', { name: /Offline title/ });
+  const title = page.getByRole('button', { name: /Offline title 1 / });
   await title.click();
   await expect(page.getByRole('heading', { name: 'Offline title' })).toBeVisible();
   await page.getByRole('tab', { name: /Tokens/ }).click();
-  await page.getByRole('button', { name: /Offline token/ }).click();
+  await page.getByRole('button', { name: /Offline token 1 / }).click();
   await expect(page.getByRole('tab', { name: /Tokens/ })).toContainText('1/3');
   await page.getByRole('tab', { name: 'Banner' }).click();
-  await page.getByRole('button', { name: /Offline banner/ }).click();
-  await expect(page.getByText('Offline banner').first()).toBeVisible();
+  await page.getByRole('button', { name: /Offline banner 1 / }).click();
+  await expect(page.getByText('Offline banner 1').first()).toBeVisible();
 });

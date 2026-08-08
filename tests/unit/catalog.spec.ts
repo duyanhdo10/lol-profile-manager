@@ -10,6 +10,7 @@ import {
   normalizeCatalog,
   overlayCompatibility,
   overlayOwnership,
+  rankEmblemUrl,
 } from '../../electron/catalog-service';
 import type { CatalogInputs } from '../../electron/catalog-service';
 import type { CatalogItem, CatalogSnapshot, InventorySnapshot } from '../../src/shared/models';
@@ -54,6 +55,7 @@ function inputs(overrides: Partial<CatalogInputs> = {}): CatalogInputs {
         name: 'First Skin',
         championId: 1,
         loadScreenPath: '/lol-game-data/assets/ASSETS/Characters/Annie/skin.jpg',
+        splashPath: '/lol-game-data/assets/ASSETS/Characters/Annie/splash.jpg',
       },
     ],
     champions: [{ id: 1, name: 'Annie' }],
@@ -89,7 +91,7 @@ function inputs(overrides: Partial<CatalogInputs> = {}): CatalogInputs {
 
 function snapshot(patch = '16.15'): CatalogSnapshot {
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     version: `${patch}.8024387+branch.releases-${patch.replace('.', '-')}.content.release`,
     patch,
     fetchedAt: new Date().toISOString(),
@@ -104,6 +106,7 @@ function snapshot(patch = '16.15'): CatalogSnapshot {
     titles: [],
     tokens: [],
     regalia: [],
+    rankEmblems: [],
   };
 }
 
@@ -131,13 +134,17 @@ describe('CommunityDragon catalog normalization', () => {
 
   it('normalizes all six CommunityDragon payloads and full source metadata', () => {
     const result = normalizeCatalog(inputs());
-    expect(result).toMatchObject({ schemaVersion: 4, patch: '16.15', compatible: true });
+    expect(result).toMatchObject({ schemaVersion: 5, patch: '16.15', compatible: true });
     expect(result.icons[0]).toMatchObject({ id: 7, name: 'Lucky', year: 2020, source: 'CommunityDragon' });
     expect(result.backgrounds[0]).toMatchObject({ id: 1001, champion: 'Annie' });
     expect(result.tokens[0]).toMatchObject({ id: 101, tier: 'GOLD', category: 'Imagination' });
     expect(result.titles[0]).toMatchObject({ contentId: 'title-one', tier: 'GOLD', category: 'Imagination' });
     expect(result.regalia).toHaveLength(1);
     expect(result.regalia[0]).toMatchObject({ id: '3', contentId: 'banner-three' });
+    expect(result.backgrounds[0]?.imageUrl).toContain('/characters/annie/splash.jpg');
+    expect(result.rankEmblems.find((item) => item.tier === 'GOLD')?.imageUrl).toBe(
+      rankEmblemUrl('GOLD', '16.15'),
+    );
   });
 
   it('accepts object maps and derives a champion from the canonical skin ID', () => {
@@ -150,6 +157,21 @@ describe('CommunityDragon catalog normalization', () => {
     );
     expect(result.icons[0]?.name).toBe('Mapped icon');
     expect(result.backgrounds[0]?.champion).toBe('Annie');
+  });
+
+  it('falls back to load-screen artwork only when splash artwork is missing', () => {
+    const result = normalizeCatalog(
+      inputs({
+        skins: [
+          {
+            id: 1001,
+            championId: 1,
+            loadScreenPath: '/lol-game-data/assets/characters/annie/load.jpg',
+          },
+        ],
+      }),
+    );
+    expect(result.backgrounds[0]?.imageUrl).toContain('/characters/annie/load.jpg');
   });
 
   it('rejects a snapshot whose metadata does not match the requested patch', () => {
@@ -185,7 +207,7 @@ describe('CommunityDragon catalog normalization', () => {
     const download = vi.fn(async () => snapshot());
     const fresh = await new CatalogService(root, download).get(false, inventory, '16.15.99', []);
     expect(download).toHaveBeenCalledWith('16.15');
-    expect(fresh.schemaVersion).toBe(4);
+    expect(fresh.schemaVersion).toBe(5);
 
     const cached = await new CatalogService(root, async () => {
       throw new Error('offline');
@@ -194,10 +216,11 @@ describe('CommunityDragon catalog normalization', () => {
     expect(cached.icons[0]?.id).toBe(7);
   });
 
-  it('migrates a v3 snapshot into the English slot of the v4 cache', async () => {
+  it('migrates a v4 snapshot into the English slot of the v5 cache and marks it stale', async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'lpt-catalog-'));
     roots.push(root);
-    const legacy = { ...snapshot(), schemaVersion: 3 };
+    const legacy: Partial<CatalogSnapshot> = { ...snapshot(), schemaVersion: 4 };
+    delete legacy.rankEmblems;
     await writeFile(path.join(root, 'catalog-snapshot.json'), JSON.stringify(legacy));
     const download = vi.fn(async () => snapshot());
     const result = await new CatalogService(root, download).get(
@@ -207,12 +230,18 @@ describe('CommunityDragon catalog normalization', () => {
       [],
     );
     expect(download).not.toHaveBeenCalled();
-    expect(result).toMatchObject({ schemaVersion: 4, locale: 'en_US', requestedLocale: 'en_US' });
+    expect(result).toMatchObject({
+      schemaVersion: 5,
+      locale: 'en_US',
+      requestedLocale: 'en_US',
+      stale: true,
+      rankEmblems: [],
+    });
     const stored = JSON.parse(await readFile(path.join(root, 'catalog-snapshot.json'), 'utf8')) as {
       schemaVersion: number;
       snapshots: { en_US: CatalogSnapshot };
     };
-    expect(stored.schemaVersion).toBe(4);
+    expect(stored.schemaVersion).toBe(5);
     expect(stored.snapshots.en_US.patch).toBe('16.15');
 
     const vietnameseOffline = await new CatalogService(root, async () => {

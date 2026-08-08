@@ -1,7 +1,19 @@
-import { Badge, Button, Card, Grid, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  SegmentedControl,
+  SimpleGrid,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from '@mantine/core';
 import { IconBrush, IconPhoto, IconSparkles, IconUserCircle } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { useState } from 'react';
 import { ProfileHero } from '../components/ProfileHero';
 import { useProfilePreview } from '../hooks/use-profile-preview';
 import { useAppStore } from '../store/app-store';
@@ -15,8 +27,20 @@ export function OverviewPage() {
   const draft = useAppStore((state) => state.draft);
   const result = useAppStore((state) => state.applyResult);
   const preview = useProfilePreview();
+  const [mode, setMode] = useState<'current' | 'draft'>('draft');
   const currentIcon = catalog?.icons.find((item) => item.id === current.iconId);
   const currentBackground = catalog?.backgrounds.find((item) => item.id === current.backgroundSkinId);
+  const currentTitle = catalog?.titles.find(
+    (item) => item.contentId === current.challengeShowcase.titleContentId,
+  );
+  const currentTokens = (current.challengeShowcase.tokenIds ?? []).flatMap(
+    (id) => catalog?.tokens.find((item) => item.id === id) ?? [],
+  );
+  const currentBanner = catalog?.regalia.find(
+    (item) =>
+      item.id === current.challengeShowcase.bannerAccent ||
+      item.contentId === current.challengeShowcase.bannerAccent,
+  );
   const actions = [
     {
       title: t('overview.chooseIcon'),
@@ -41,30 +65,57 @@ export function OverviewPage() {
 
   return (
     <Stack gap="lg">
-      <Grid>
-        <Grid.Col span={{ base: 12, xl: 6 }}>
-          <ProfileHero
-            eyebrow={t('overview.live')}
-            title={t('overview.current')}
-            iconUrl={currentIcon?.imageUrl}
-            backgroundUrl={currentBackground?.imageUrl}
-            status={current.statusMessage}
-            rank={current.rank}
-            badge={t('overview.liveBadge')}
-          />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, xl: 6 }}>
-          <ProfileHero
-            eyebrow={t('overview.draft')}
-            title={preview.title?.name ?? t('overview.after')}
-            iconUrl={preview.icon?.imageUrl}
-            backgroundUrl={preview.background?.imageUrl}
-            status={preview.status}
-            rank={preview.rank}
-            badge={t('overview.pending', { count: Object.keys(draft).length })}
-          />
-        </Grid.Col>
-      </Grid>
+      <Group justify="space-between">
+        <div>
+          <Text size="xs" c="dimmed">
+            {t('overview.riotPreview')}
+          </Text>
+          <Title order={3}>{t('overview.profilePreview')}</Title>
+        </div>
+        <SegmentedControl
+          value={mode}
+          onChange={(value) => setMode(value as 'current' | 'draft')}
+          data={[
+            { value: 'current', label: t('overview.currentToggle') },
+            { value: 'draft', label: t('overview.afterToggle') },
+          ]}
+        />
+      </Group>
+      {mode === 'current' ? (
+        <ProfileHero
+          eyebrow={t('overview.live')}
+          identity={current.identity}
+          challengeTitle={currentTitle?.name}
+          iconUrl={currentIcon?.imageUrl}
+          backgroundUrl={currentBackground?.imageUrl}
+          bannerUrl={currentBanner?.imageUrl}
+          status={current.statusMessage}
+          tokens={currentTokens}
+          rankedQueues={current.rankedQueues}
+          activeRankQueue={current.rank?.queue ?? null}
+          regalia={current.regalia}
+          regaliaContext={current.regaliaContext}
+          rankEmblems={catalog?.rankEmblems ?? []}
+          badge={t('overview.liveBadge')}
+        />
+      ) : (
+        <ProfileHero
+          eyebrow={t('overview.draft')}
+          identity={preview.identity}
+          challengeTitle={preview.title?.name}
+          iconUrl={preview.icon?.imageUrl}
+          backgroundUrl={preview.background?.imageUrl}
+          bannerUrl={preview.banner?.imageUrl}
+          status={preview.status}
+          tokens={preview.tokens}
+          rankedQueues={preview.rankedQueues}
+          activeRankQueue={preview.activeRankQueue}
+          regalia={preview.regalia}
+          regaliaContext={preview.regaliaContext}
+          rankEmblems={catalog?.rankEmblems ?? []}
+          badge={t('overview.pending', { count: Object.keys(draft).length })}
+        />
+      )}
       <SimpleGrid cols={{ base: 1, sm: 2, xl: 4 }}>
         {actions.map((action) => (
           <Card

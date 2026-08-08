@@ -54,6 +54,10 @@ export interface RegaliaCatalogItem extends CatalogMetadata {
   regaliaType: 'kBanner';
 }
 
+export interface RankEmblemCatalogItem extends CatalogMetadata {
+  tier: Tier;
+}
+
 export interface CatalogFallback {
   file: string;
   requestedLocale: AppLocale;
@@ -77,6 +81,7 @@ export interface CatalogSnapshot {
   titles: ChallengeTitleCatalogItem[];
   tokens: ChallengeTokenCatalogItem[];
   regalia: RegaliaCatalogItem[];
+  rankEmblems: RankEmblemCatalogItem[];
 }
 
 export interface InventorySnapshot {

@@ -1,13 +1,44 @@
 .hero {
-  min-height: 250px;
-  padding: 24px;
-  border: 1px solid rgb(110 196 191 / 14%);
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: 480px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 28px;
+  border: 1px solid rgb(110 196 191 / 18%);
   background-color: var(--lpm-surface);
-  background-image: linear-gradient(90deg, rgb(4 13 21 / 96%), rgb(4 13 21 / 35%)), var(--hero-background);
+  background-image:
+    linear-gradient(90deg, rgb(4 13 21 / 94%) 0%, rgb(4 13 21 / 48%) 48%, rgb(4 13 21 / 20%)),
+    var(--hero-background);
   background-position: center;
   background-size: cover;
-  box-shadow: 0 24px 60px rgb(0 0 0 / 24%);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 28%);
   overflow: hidden;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 31%;
+  background-image: linear-gradient(0deg, rgb(5 15 23 / 97%), rgb(5 15 23 / 72%)), var(--hero-banner);
+  background-position: center;
+  background-size: cover;
+  pointer-events: none;
+}
+
+.topBar,
+.identity,
+.bottom {
+  position: relative;
+  z-index: 1;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
 }
 
 .eyebrow {
@@ -17,15 +48,101 @@
   letter-spacing: 0.15em;
 }
 
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  align-self: center;
+  max-width: 740px;
+}
+
 .avatar {
-  border: 2px solid rgb(218 188 102 / 62%);
+  flex: 0 0 auto;
+  border: 2px solid rgb(218 188 102 / 72%);
   background: #102733;
-  box-shadow: 0 8px 30px rgb(0 0 0 / 40%);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 44%);
 }
 
 .logoFallback {
-  width: 132px;
-  height: 132px;
-  max-width: none;
-  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.level {
+  color: #dcc274;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tokens {
+  margin-left: auto;
+}
+
+.tokens img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  filter: drop-shadow(0 9px 12px rgb(0 0 0 / 45%));
+}
+
+.bottom {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.rankStrip {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rankCard {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgb(132 174 178 / 16%);
+  border-radius: 10px;
+  background: rgb(5 17 25 / 74%);
+}
+
+.rankCard[data-active] {
+  border-color: rgb(78 194 183 / 58%);
+}
+
+.rankCard img,
+.rankCard > span {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.rankCard > span {
+  display: grid;
+  place-items: center;
+  color: #647982;
+}
+
+.regalia {
+  min-width: 210px;
+  padding: 10px 14px;
+  border: 1px solid rgb(205 177 93 / 22%);
+  border-radius: 10px;
+  background: rgb(5 17 25 / 78%);
+}
+
+@media (width <= 1100px) {
+  .hero {
+    min-height: 440px;
+  }
+
+  .tokens {
+    display: none;
+  }
 }

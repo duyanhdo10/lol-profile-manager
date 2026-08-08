@@ -41,7 +41,7 @@ function draftValue(draft: ProfileDraft, before: ProfileState, field: ProfileFie
   if (field === 'challengeShowcase') return { ...before.challengeShowcase, ...draft.challengeShowcase };
   if (field === 'regalia') return draft.regalia ?? before.regalia;
   if (field === 'status') return draft.statusMessage ?? '';
-  return draft.rank ?? null;
+  return draft.rank ? draft.rank.queues[draft.rank.activeQueue] : null;
 }
 
 function stateValue(state: ProfileState, field: ProfileField): FieldValue {
@@ -350,7 +350,7 @@ export class ApplyService {
         state.challengeShowcase = { ...state.challengeShowcase, ...draft.challengeShowcase };
       if (step.field === 'regalia') state.regalia = draft.regalia ?? state.regalia;
       if (step.field === 'status') state.statusMessage = draft.statusMessage ?? state.statusMessage;
-      if (step.field === 'rank') state.rank = draft.rank ?? state.rank;
+      if (step.field === 'rank' && draft.rank) state.rank = draft.rank.queues[draft.rank.activeQueue];
     }
     return state;
   }

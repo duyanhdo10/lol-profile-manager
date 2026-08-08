@@ -12,11 +12,12 @@ import type {
   Ownership,
   ProfileField,
   RegaliaCatalogItem,
+  RankEmblemCatalogItem,
 } from '../src/shared/models';
 import { JsonFileStore } from './file-store';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-export const CATALOG_SCHEMA_VERSION = 4;
+export const CATALOG_SCHEMA_VERSION = 5;
 const ALLOWED_HOSTS = new Set(['raw.communitydragon.org']);
 const TIERS: ChallengeTier[] = [
   'IRON',
@@ -111,8 +112,8 @@ export interface CatalogInputs {
   fallbacks?: CatalogSnapshot['fallbacks'];
 }
 
-interface CatalogCacheV4 {
-  schemaVersion: 4;
+interface CatalogCacheV5 {
+  schemaVersion: 5;
   snapshots: Partial<Record<AppLocale, CatalogSnapshot>>;
 }
 
@@ -142,6 +143,10 @@ export function cdragonAssetUrl(pathValue: string | undefined, patch: string, fa
     .replace(/^\/+/, '')
     .toLowerCase();
   return `https://raw.communitydragon.org/${patch}/plugins/rcp-be-lol-game-data/global/default/${normalized}`;
+}
+
+export function rankEmblemUrl(tier: ChallengeTier, patch: string): string {
+  return `https://raw.communitydragon.org/${patch}/plugins/rcp-fe-lol-static-assets/global/default/ranked-emblem/emblem-${tier.toLowerCase()}.png`;
 }
 
 function overlayOwnedBy<T extends OwnedCatalogEntry, K extends string | number>(
@@ -255,7 +260,7 @@ export function normalizeCatalog(input: CatalogInputs): CatalogSnapshot {
         id,
         kind: 'background',
         name: skin.name?.trim() || `Skin ${id}`,
-        imageUrl: cdragonAssetUrl(skin.loadScreenPath || skin.splashPath, input.patch),
+        imageUrl: cdragonAssetUrl(skin.splashPath || skin.loadScreenPath, input.patch),
         ...sourceMetadata(input.sourceVersion),
         champion: championNames.get(skin.championId ?? Math.floor(id / 1000)),
         skinline:
@@ -345,6 +350,13 @@ export function normalizeCatalog(input: CatalogInputs): CatalogSnapshot {
       },
     ];
   });
+  const rankEmblems: RankEmblemCatalogItem[] = TIERS.map((tier) => ({
+    tier,
+    name: `${tier} ranked emblem`,
+    imageUrl: rankEmblemUrl(tier, input.patch),
+    ...sourceMetadata(input.sourceVersion),
+    visibility: ['Profile/hovercard'],
+  }));
 
   return {
     schemaVersion: CATALOG_SCHEMA_VERSION,
@@ -362,6 +374,7 @@ export function normalizeCatalog(input: CatalogInputs): CatalogSnapshot {
     titles,
     tokens,
     regalia,
+    rankEmblems,
   };
 }
 
@@ -378,7 +391,9 @@ function validSnapshot(snapshot: unknown): snapshot is CatalogSnapshot {
   if (typeof snapshot !== 'object' || snapshot === null) return false;
   const value = snapshot as Partial<CatalogSnapshot>;
   return (
-    (value.schemaVersion === 3 || value.schemaVersion === CATALOG_SCHEMA_VERSION) &&
+    (value.schemaVersion === 3 ||
+      value.schemaVersion === 4 ||
+      value.schemaVersion === CATALOG_SCHEMA_VERSION) &&
     typeof value.patch === 'string' &&
     Array.isArray(value.titles) &&
     Array.isArray(value.tokens) &&
@@ -386,15 +401,38 @@ function validSnapshot(snapshot: unknown): snapshot is CatalogSnapshot {
   );
 }
 
-function migrateCache(value: CatalogCacheV4 | CatalogSnapshot | null): CatalogCacheV4 {
-  if (value && 'snapshots' in value && value.schemaVersion === CATALOG_SCHEMA_VERSION) return value;
+function migrateSnapshot(snapshot: CatalogSnapshot): CatalogSnapshot {
+  return {
+    ...snapshot,
+    schemaVersion: CATALOG_SCHEMA_VERSION,
+    rankEmblems: Array.isArray(snapshot.rankEmblems) ? snapshot.rankEmblems : [],
+  };
+}
+
+function migrateCache(value: unknown): CatalogCacheV5 {
+  const root = typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
+  const snapshots =
+    root && typeof root['snapshots'] === 'object' && root['snapshots'] !== null
+      ? (root['snapshots'] as Partial<Record<AppLocale, CatalogSnapshot>>)
+      : null;
+  if (snapshots && root?.['schemaVersion'] === CATALOG_SCHEMA_VERSION) return value as CatalogCacheV5;
+  if (snapshots) {
+    return {
+      schemaVersion: CATALOG_SCHEMA_VERSION,
+      snapshots: Object.fromEntries(
+        Object.entries(snapshots).map(([locale, snapshot]) => [
+          locale,
+          snapshot && validSnapshot(snapshot) ? migrateSnapshot(snapshot) : snapshot,
+        ]),
+      ),
+    };
+  }
   if (validSnapshot(value)) {
     return {
       schemaVersion: CATALOG_SCHEMA_VERSION,
       snapshots: {
         en_US: {
-          ...value,
-          schemaVersion: CATALOG_SCHEMA_VERSION,
+          ...migrateSnapshot(value),
           locale: 'en_US',
           requestedLocale: 'en_US',
           fallbacks: [],
@@ -422,7 +460,7 @@ export async function loadLocalizedFile<T>(
 }
 
 export class CatalogService {
-  private readonly store: JsonFileStore<CatalogCacheV4 | CatalogSnapshot | null>;
+  private readonly store: JsonFileStore<CatalogCacheV5 | CatalogSnapshot | null>;
 
   constructor(
     userDataPath: string,
@@ -454,13 +492,14 @@ export class CatalogService {
     const requestedPatch = exactPatch(clientVersion) ?? undefined;
     const fresh = usableCache && Date.now() - Date.parse(cached.fetchedAt) < DAY_MS;
     const patchMatches = usableCache && (!requestedPatch || cached.patch === requestedPatch);
+    const cacheSchemaStale = usableCache && cached.rankEmblems.length === 0;
     let snapshot: CatalogSnapshot;
 
     if (normalizedRequest.mode === 'cache-first' && usableCache) {
       snapshot = {
         ...cached,
         fromCache: true,
-        stale: cacheLocaleFallback || !fresh || !patchMatches,
+        stale: cacheLocaleFallback || cacheSchemaStale || !fresh || !patchMatches,
         refreshFailed: false,
         requestedLocale: normalizedRequest.locale,
         fallbacks: cacheLocaleFallback
@@ -496,7 +535,7 @@ export class CatalogService {
         snapshot = {
           ...cached,
           fromCache: true,
-          stale: cacheLocaleFallback || !fresh || !patchMatches,
+          stale: cacheLocaleFallback || cacheSchemaStale || !fresh || !patchMatches,
           refreshFailed: true,
           requestedLocale: normalizedRequest.locale,
           fallbacks: cacheLocaleFallback

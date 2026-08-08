@@ -41,7 +41,9 @@
 }
 
 .backgroundHero {
+  aspect-ratio: 16 / 5;
   min-height: 245px;
+  max-height: 320px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -49,7 +51,7 @@
   border: 1px solid rgb(120 196 193 / 13%);
   background-color: var(--lpm-surface);
   background-image: linear-gradient(90deg, rgb(4 13 21 / 95%), rgb(4 13 21 / 24%)), var(--background-image);
-  background-position: center;
+  background-position: center 30%;
   background-size: cover;
 }
 

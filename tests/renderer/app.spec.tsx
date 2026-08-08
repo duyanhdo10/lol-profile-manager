@@ -10,7 +10,7 @@ import { AppRouter } from '../../src/renderer/app/AppRouter';
 import { resetAppStoreCoordinatorsForTests, useAppStore } from '../../src/renderer/store/app-store';
 
 const catalog: CatalogSnapshot = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   version: '16.15.1+release',
   patch: '16.15',
   fetchedAt: new Date().toISOString(),
@@ -38,6 +38,7 @@ const catalog: CatalogSnapshot = {
   titles: [],
   tokens: [],
   regalia: [],
+  rankEmblems: [],
 };
 
 function bridge(): LcuBridge {

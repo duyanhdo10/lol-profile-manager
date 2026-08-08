@@ -6,6 +6,7 @@ import type {
   ProfileDraft,
   Queue,
   RankAppearance,
+  RankDisplayDraft,
   RegaliaAppearance,
   Tier,
 } from '../src/shared/models';
@@ -26,7 +27,7 @@ const tiers = new Set<Tier>([
 ]);
 const divisions = new Set<Division>(['I', 'II', 'III', 'IV']);
 const crestModes = new Set<CrestMode>(['prestige', 'ranked']);
-const bannerModes = new Set<BannerMode>(['lastSeasonHighestRank', 'highestRank']);
+const bannerModes = new Set<BannerMode>(['blank', 'lastSeasonHighestRank', 'highestRank']);
 const contentIdPattern = /^[a-z0-9][a-z0-9-]{0,99}$/i;
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -48,6 +49,15 @@ export function validateRank(value: unknown): value is RankAppearance {
   return (
     !['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(value['tier'] as string) || value['division'] === 'I'
   );
+}
+
+export function validateRankDisplayDraft(value: unknown): value is RankDisplayDraft {
+  if (!object(value) || !queues.has(value['activeQueue'] as Queue) || !object(value['queues'])) return false;
+  const rankQueues = value['queues'] as Record<string, unknown>;
+  return [...queues].every((queue) => {
+    const appearance = rankQueues[queue];
+    return validateRank(appearance) && appearance.queue === queue;
+  });
 }
 
 export function validateChallengeShowcase(value: unknown): value is ChallengeShowcase {
@@ -98,6 +108,6 @@ export function validateDraft(value: unknown): asserts value is ProfileDraft {
     (typeof value['statusMessage'] !== 'string' || value['statusMessage'].length > MAX_STATUS_LENGTH)
   )
     throw new Error(`Status must be at most ${MAX_STATUS_LENGTH} characters.`);
-  if (value['rank'] !== undefined && !validateRank(value['rank']))
+  if (value['rank'] !== undefined && !validateRankDisplayDraft(value['rank']))
     throw new Error('Invalid rank tier, division, or queue.');
 }

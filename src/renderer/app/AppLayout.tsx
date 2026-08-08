@@ -72,9 +72,6 @@ export function AppLayout() {
             <Text fw={800} size="sm">
               LoL Profile Manager
             </Text>
-            <Text c="dimmed" size="xs">
-              BETA
-            </Text>
           </Box>
         </Group>
         <Stack gap={5} className={styles.navigation} component="nav" aria-label={t('nav.aria')}>

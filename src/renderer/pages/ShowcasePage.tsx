@@ -83,6 +83,8 @@ export function ShowcasePage() {
   const titles = (catalog?.titles ?? []).filter((item) => matches(item, item.contentId));
   const tokens = (catalog?.tokens ?? []).filter((item) => matches(item, item.id));
   const banners = (catalog?.regalia ?? []).filter((item) => matches(item, item.contentId));
+  const resultCount =
+    activeTab === 'title' ? titles.length : activeTab === 'tokens' ? tokens.length : banners.length;
   const ownershipOptions = [
     { value: 'all', label: t('common.all') },
     { value: 'owned', label: t('common.owned') },
@@ -126,7 +128,11 @@ export function ShowcasePage() {
       </Paper>
 
       <Card className={styles.editor}>
-        <Tabs value={activeTab} onChange={(value) => navigate(`/showcase/${value ?? 'title'}`)}>
+        <Tabs
+          className={styles.tabs}
+          value={activeTab}
+          onChange={(value) => navigate(`/showcase/${value ?? 'title'}`)}
+        >
           <Tabs.List>
             <Tabs.Tab value="title">{t('showcase.title')}</Tabs.Tab>
             <Tabs.Tab value="tokens">
@@ -139,7 +145,7 @@ export function ShowcasePage() {
             <Tabs.Tab value="regalia">{t('showcase.regalia')}</Tabs.Tab>
           </Tabs.List>
           {activeTab !== 'regalia' && (
-            <Group grow mt="md" wrap="nowrap">
+            <Group grow mt="md" wrap="nowrap" className={styles.filters}>
               <TextInput
                 value={search}
                 onChange={(event) => setSearch(event.currentTarget.value)}
@@ -179,16 +185,22 @@ export function ShowcasePage() {
                   ]}
                 />
               )}
+              <Text size="xs" c="dimmed" className={styles.resultCount}>
+                {t('common.results', { count: resultCount })}
+              </Text>
             </Group>
           )}
 
-          <Tabs.Panel value="title" pt="md">
+          <Tabs.Panel value="title" pt="md" className={styles.panel}>
             <VirtualGrid
               items={titles}
               columns={1}
               rowHeight={76}
               getKey={(item) => item.contentId}
               empty={t('showcase.noTitles')}
+              fillHeight
+              measureKey={activeTab}
+              testId="titles-grid"
               renderItem={(item) => (
                 <button
                   type="button"
@@ -211,7 +223,7 @@ export function ShowcasePage() {
               )}
             />
           </Tabs.Panel>
-          <Tabs.Panel value="tokens" pt="md">
+          <Tabs.Panel value="tokens" pt="md" className={styles.panel}>
             <Group className={styles.tokenSlots} align="stretch">
               {preview.tokens.map((token, index) => (
                 <Paper key={token.id} className={styles.tokenSlot}>
@@ -264,6 +276,9 @@ export function ShowcasePage() {
               rowHeight={118}
               getKey={(item) => item.id}
               empty={t('showcase.noTokens')}
+              fillHeight
+              measureKey={activeTab}
+              testId="tokens-grid"
               renderItem={(item) => (
                 <button
                   type="button"
@@ -281,13 +296,19 @@ export function ShowcasePage() {
               )}
             />
           </Tabs.Panel>
-          <Tabs.Panel value="banner" pt="md">
+          <Tabs.Panel value="banner" pt="md" className={styles.panel}>
+            <Text size="xs" c="dimmed" mb="sm">
+              {t('showcase.bannerShowcaseNote')}
+            </Text>
             <VirtualGrid
               items={banners}
               columns={2}
               rowHeight={112}
               getKey={(item) => item.contentId}
               empty={t('showcase.noBanners')}
+              fillHeight
+              measureKey={activeTab}
+              testId="banners-grid"
               renderItem={(item) => (
                 <button
                   type="button"
@@ -339,6 +360,7 @@ export function ShowcasePage() {
                   label={t('showcase.bannerMode')}
                   value={preview.regalia.preferredBannerType}
                   data={[
+                    { value: 'blank', label: t('showcase.blank') },
                     { value: 'lastSeasonHighestRank', label: t('showcase.lastSeason') },
                     { value: 'highestRank', label: t('showcase.highest') },
                   ]}
@@ -368,6 +390,32 @@ export function ShowcasePage() {
               </Group>
               <Text size="xs" c="dimmed">
                 {t('showcase.regaliaNote')}
+              </Text>
+              <Group grow>
+                <Paper p="md" withBorder>
+                  <Text size="xs" c="dimmed">
+                    {t('showcase.resolvedCrest')}
+                  </Text>
+                  <Text fw={700}>{preview.regaliaContext.resolvedCrest}</Text>
+                </Paper>
+                <Paper p="md" withBorder>
+                  <Text size="xs" c="dimmed">
+                    {t('showcase.accountLevel')}
+                  </Text>
+                  <Text fw={700}>{preview.regaliaContext.accountLevel}</Text>
+                </Paper>
+                <Paper p="md" withBorder>
+                  <Text size="xs" c="dimmed">
+                    {t('showcase.rankContext')}
+                  </Text>
+                  <Text fw={700}>
+                    {preview.regaliaContext.highestRank ?? t('presence.unranked')} ·{' '}
+                    {preview.regaliaContext.lastSeasonHighestRank ?? t('presence.unranked')}
+                  </Text>
+                </Paper>
+              </Group>
+              <Text size="xs" c="dimmed">
+                {t('showcase.prestigeLevelNote')}
               </Text>
               {draft.regalia && (
                 <Button variant="light" color="gray" w="fit-content" onClick={() => clearField('regalia')}>

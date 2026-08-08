@@ -3,15 +3,19 @@ import { promises as fs } from 'node:fs';
 import https from 'node:https';
 import path from 'node:path';
 import type {
-  BannerMode,
   ChallengeShowcase,
   ClientLocale,
   ConnectionState,
-  CrestMode,
   InventorySnapshot,
   ProfileState,
   RankAppearance,
+  RankedQueueSnapshot,
+  RankedQueueSnapshotMap,
   RegaliaAppearance,
+  RegaliaContext,
+  Queue,
+  Tier,
+  Division,
 } from '../src/shared/models';
 
 interface Credentials {
@@ -57,6 +61,90 @@ interface RegaliaResponse {
   preferredBannerType?: string;
   selectedPrestigeCrest?: number;
   preferences?: RegaliaResponse;
+  crestType?: string;
+  bannerType?: string;
+  highestRank?: string;
+  highestPreviousSeasonEndTier?: string;
+  highestRankedEntry?: unknown;
+  lastSeasonHighestRank?: string;
+  summonerLevel?: number;
+}
+
+const QUEUES: Queue[] = ['RANKED_SOLO_5x5', 'RANKED_FLEX_SR', 'RANKED_TFT'];
+const TIERS: Tier[] = [
+  'IRON',
+  'BRONZE',
+  'SILVER',
+  'GOLD',
+  'PLATINUM',
+  'EMERALD',
+  'DIAMOND',
+  'MASTER',
+  'GRANDMASTER',
+  'CHALLENGER',
+];
+const DIVISIONS: Division[] = ['I', 'II', 'III', 'IV'];
+
+function record(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function rankedEntry(value: unknown, queueHint?: string): RankedQueueSnapshot | null {
+  const entry = record(value);
+  if (!entry) return null;
+  const queue = String(entry['queueType'] ?? entry['queue'] ?? queueHint ?? '');
+  const tier = String(entry['tier'] ?? '').toUpperCase();
+  const division = String(entry['division'] ?? '').toUpperCase();
+  if (!QUEUES.includes(queue as Queue) || !TIERS.includes(tier as Tier)) return null;
+  const normalizedDivision = DIVISIONS.includes(division as Division) ? (division as Division) : 'I';
+  return {
+    queue: queue as Queue,
+    tier: tier as Tier,
+    division: normalizedDivision,
+    ...(typeof entry['leaguePoints'] === 'number' ? { leaguePoints: entry['leaguePoints'] } : {}),
+    ...(typeof entry['wins'] === 'number' ? { wins: entry['wins'] } : {}),
+    ...(typeof entry['losses'] === 'number' ? { losses: entry['losses'] } : {}),
+  };
+}
+
+export function parseRankedStats(value: unknown): RankedQueueSnapshotMap {
+  const result: RankedQueueSnapshotMap = {
+    RANKED_SOLO_5x5: null,
+    RANKED_FLEX_SR: null,
+    RANKED_TFT: null,
+  };
+  const root = record(value);
+  const queueMap = record(root?.['queueMap']);
+  for (const [queue, entry] of Object.entries(queueMap ?? {})) {
+    const parsed = rankedEntry(entry, queue);
+    if (parsed) result[parsed.queue] = parsed;
+  }
+  const entries = [
+    ...(Array.isArray(root?.['queues']) ? root['queues'] : []),
+    ...(Array.isArray(root?.['rankedEntries']) ? root['rankedEntries'] : []),
+  ];
+  for (const entry of entries) {
+    const parsed = rankedEntry(entry);
+    if (parsed) result[parsed.queue] = parsed;
+  }
+  return result;
+}
+
+export function parseRegaliaAppearance(value: RegaliaResponse): RegaliaAppearance {
+  const preferences = value.preferences ?? value;
+  const crest = preferences.preferredCrestType;
+  const banner = preferences.preferredBannerType;
+  return {
+    preferredCrestType: crest === 'ranked' ? 'ranked' : 'prestige',
+    preferredBannerType: banner === 'blank' || banner === 'highestRank' ? banner : 'lastSeasonHighestRank',
+    selectedPrestigeCrest:
+      Number.isSafeInteger(preferences.selectedPrestigeCrest) &&
+      Number(preferences.selectedPrestigeCrest) >= 0
+        ? Math.min(255, Number(preferences.selectedPrestigeCrest))
+        : 0,
+  };
 }
 
 export class LcuError extends Error {
@@ -192,8 +280,14 @@ export class LcuClient extends EventEmitter {
   }
 
   async readProfile(): Promise<ProfileState> {
-    const [summoner, profile, chat, challenges, regalia] = await Promise.all([
-      this.request<{ profileIconId?: number }>('GET', '/lol-summoner/v1/current-summoner'),
+    const [summoner, profile, chat, challenges, regalia, rankedStats] = await Promise.all([
+      this.request<{
+        profileIconId?: number;
+        gameName?: string;
+        tagLine?: string;
+        displayName?: string;
+        summonerLevel?: number;
+      }>('GET', '/lol-summoner/v1/current-summoner'),
       this.request<{ backgroundSkinId?: number }>(
         'GET',
         '/lol-summoner/v1/current-summoner/summoner-profile',
@@ -201,6 +295,9 @@ export class LcuClient extends EventEmitter {
       this.request<ChatMe>('GET', '/lol-chat/v1/me'),
       this.request<ChallengeSummary>('GET', '/lol-challenges/v1/summary-player-data/local-player'),
       this.request<RegaliaResponse>('GET', '/lol-regalia/v2/current-summoner/regalia'),
+      this.request<unknown>('GET', '/lol-ranked/v1/current-ranked-stats')
+        .then((response) => response.body)
+        .catch(() => null),
     ]);
     const lol = chat.body.lol;
     const rank =
@@ -212,12 +309,21 @@ export class LcuClient extends EventEmitter {
           } as RankAppearance)
         : null;
     return {
+      identity: {
+        gameName: summoner.body.gameName?.trim() || summoner.body.displayName?.trim() || '',
+        tagLine: summoner.body.tagLine?.trim() || '',
+        accountLevel: Number.isSafeInteger(summoner.body.summonerLevel)
+          ? Number(summoner.body.summonerLevel)
+          : 0,
+      },
       iconId: typeof chat.body.icon === 'number' ? chat.body.icon : (summoner.body.profileIconId ?? null),
       backgroundSkinId: profile.body.backgroundSkinId ?? null,
       challengeShowcase: this.challengePreferences(challenges.body),
       regalia: this.regaliaPreferences(regalia.body),
       statusMessage: chat.body.statusMessage ?? '',
       rank,
+      rankedQueues: parseRankedStats(rankedStats),
+      regaliaContext: this.regaliaContext(regalia.body, rankedStats, summoner.body.summonerLevel),
     };
   }
 
@@ -377,17 +483,47 @@ export class LcuClient extends EventEmitter {
   }
 
   private regaliaPreferences(value: RegaliaResponse): RegaliaAppearance {
-    const preferences = value.preferences ?? value;
-    const crest = preferences.preferredCrestType;
-    const banner = preferences.preferredBannerType;
+    return parseRegaliaAppearance(value);
+  }
+
+  private regaliaContext(
+    value: RegaliaResponse,
+    rankedStats: unknown,
+    accountLevel?: number,
+  ): RegaliaContext {
+    const preferences = this.regaliaPreferences(value);
+    const stats = record(rankedStats);
+    const highestEntry = rankedEntry(stats?.['highestRankedEntry']) ?? rankedEntry(value.highestRankedEntry);
+    const queues = parseRankedStats(rankedStats);
+    const highestRank =
+      highestEntry?.tier ??
+      TIERS.findLast((tier) => Object.values(queues).some((entry) => entry?.tier === tier)) ??
+      null;
+    const reportedHighest = String(value.highestRank ?? '').toUpperCase();
+    const previous = String(
+      stats?.['highestPreviousSeasonEndTier'] ??
+        value.highestPreviousSeasonEndTier ??
+        value.lastSeasonHighestRank ??
+        '',
+    ).toUpperCase();
     return {
-      preferredCrestType: (crest === 'ranked' ? 'ranked' : 'prestige') as CrestMode,
-      preferredBannerType: (banner === 'highestRank' ? 'highestRank' : 'lastSeasonHighestRank') as BannerMode,
-      selectedPrestigeCrest:
-        Number.isSafeInteger(preferences.selectedPrestigeCrest) &&
-        Number(preferences.selectedPrestigeCrest) >= 0
-          ? Math.min(255, Number(preferences.selectedPrestigeCrest))
+      resolvedCrest:
+        value.crestType === 'ranked' || value.crestType === 'prestige'
+          ? value.crestType
+          : preferences.preferredCrestType,
+      resolvedBanner:
+        value.bannerType === 'blank' ||
+        value.bannerType === 'highestRank' ||
+        value.bannerType === 'lastSeasonHighestRank'
+          ? value.bannerType
+          : preferences.preferredBannerType,
+      accountLevel: Number.isSafeInteger(value.summonerLevel)
+        ? Number(value.summonerLevel)
+        : Number.isSafeInteger(accountLevel)
+          ? Number(accountLevel)
           : 0,
+      highestRank: TIERS.includes(reportedHighest as Tier) ? (reportedHighest as Tier) : highestRank,
+      lastSeasonHighestRank: TIERS.includes(previous as Tier) ? (previous as Tier) : null,
     };
   }
 

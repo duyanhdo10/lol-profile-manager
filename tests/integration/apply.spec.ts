@@ -11,6 +11,7 @@ import type {
 } from '../../src/shared/models';
 
 const before: ProfileState = {
+  identity: { gameName: 'Player', tagLine: 'SEA', accountLevel: 100 },
   backgroundSkinId: 100,
   iconId: 10,
   challengeShowcase: { titleContentId: 'old-title', tokenIds: [1], bannerAccent: 'old-banner' },
@@ -21,6 +22,18 @@ const before: ProfileState = {
   },
   statusMessage: 'before',
   rank: { queue: 'RANKED_SOLO_5x5', tier: 'GOLD', division: 'II' },
+  rankedQueues: {
+    RANKED_SOLO_5x5: { queue: 'RANKED_SOLO_5x5', tier: 'GOLD', division: 'II' },
+    RANKED_FLEX_SR: null,
+    RANKED_TFT: null,
+  },
+  regaliaContext: {
+    resolvedCrest: 'prestige',
+    resolvedBanner: 'lastSeasonHighestRank',
+    accountLevel: 100,
+    highestRank: 'GOLD',
+    lastSeasonHighestRank: 'SILVER',
+  },
 };
 const draft: ProfileDraft = {
   backgroundSkinId: 200,
@@ -28,10 +41,17 @@ const draft: ProfileDraft = {
   challengeShowcase: { titleContentId: 'new-title', tokenIds: [2, 3, 4], bannerAccent: 'new-banner' },
   regalia: { preferredCrestType: 'ranked', preferredBannerType: 'highestRank', selectedPrestigeCrest: 20 },
   statusMessage: 'after',
-  rank: { queue: 'RANKED_FLEX_SR', tier: 'EMERALD', division: 'III' },
+  rank: {
+    activeQueue: 'RANKED_FLEX_SR',
+    queues: {
+      RANKED_SOLO_5x5: { queue: 'RANKED_SOLO_5x5', tier: 'DIAMOND', division: 'I' },
+      RANKED_FLEX_SR: { queue: 'RANKED_FLEX_SR', tier: 'EMERALD', division: 'III' },
+      RANKED_TFT: { queue: 'RANKED_TFT', tier: 'GOLD', division: 'IV' },
+    },
+  },
 };
 const emptyCatalog: CatalogSnapshot = {
-  schemaVersion: 4,
+  schemaVersion: 5,
   version: '16.15.1+release',
   patch: '16.15',
   fetchedAt: '',
@@ -46,6 +66,7 @@ const emptyCatalog: CatalogSnapshot = {
   titles: [],
   tokens: [],
   regalia: [],
+  rankEmblems: [],
 };
 
 class FakeLcu {
@@ -115,6 +136,13 @@ describe('transactional profile apply', () => {
       title: 'new-title',
       challengeIds: [2, 3, 4],
       bannerAccent: 'new-banner',
+    });
+    expect(lcu.calls[5]?.body).toEqual({
+      lol: {
+        rankedLeagueQueue: 'RANKED_FLEX_SR',
+        rankedLeagueTier: 'EMERALD',
+        rankedLeagueDivision: 'III',
+      },
     });
   });
 

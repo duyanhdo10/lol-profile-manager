@@ -47,8 +47,15 @@ export function ReviewModal() {
     },
     {
       field: t('review.rank'),
-      before: preview.before.rank?.tier ?? t('review.none'),
-      after: preview.draft.rank?.tier ?? noChange,
+      before: preview.before.rank
+        ? `${preview.before.rank.tier} ${preview.before.rank.division} · ${preview.before.rank.queue}`
+        : t('review.none'),
+      after: preview.draft.rank
+        ? (() => {
+            const rank = preview.draft.rank.queues[preview.draft.rank.activeQueue];
+            return `${rank.tier} ${rank.division} · ${preview.draft.rank.activeQueue}`;
+          })()
+        : noChange,
       changed: preview.draft.rank !== undefined,
     },
   ];

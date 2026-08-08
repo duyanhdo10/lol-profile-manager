@@ -23,7 +23,17 @@ export function useProfilePreview() {
       showcase,
       regalia,
       status: draft.statusMessage ?? current.statusMessage,
-      rank: draft.rank ?? current.rank,
+      rank: draft.rank ? draft.rank.queues[draft.rank.activeQueue] : current.rank,
+      rankedQueues: draft.rank
+        ? {
+            RANKED_SOLO_5x5: { ...draft.rank.queues.RANKED_SOLO_5x5 },
+            RANKED_FLEX_SR: { ...draft.rank.queues.RANKED_FLEX_SR },
+            RANKED_TFT: { ...draft.rank.queues.RANKED_TFT },
+          }
+        : current.rankedQueues,
+      activeRankQueue: draft.rank?.activeQueue ?? current.rank?.queue ?? null,
+      identity: current.identity,
+      regaliaContext: current.regaliaContext,
     };
   }, [catalog, current, draft]);
 }

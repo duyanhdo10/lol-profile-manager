@@ -157,6 +157,7 @@ function proxyCatalogImages(snapshot: CatalogSnapshot): CatalogSnapshot {
     titles: snapshot.titles.map((item) => ({ ...item, imageUrl: proxy(item.imageUrl) })),
     tokens: snapshot.tokens.map((item) => ({ ...item, imageUrl: proxy(item.imageUrl) })),
     regalia: snapshot.regalia.map((item) => ({ ...item, imageUrl: proxy(item.imageUrl) })),
+    rankEmblems: snapshot.rankEmblems.map((item) => ({ ...item, imageUrl: proxy(item.imageUrl) })),
   };
 }
 
