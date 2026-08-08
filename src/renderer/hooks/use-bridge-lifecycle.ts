@@ -5,6 +5,7 @@ export function useBridgeLifecycle(): void {
   const initialize = useAppStore((state) => state.initialize);
   const handleConnection = useAppStore((state) => state.handleConnection);
   const setResetBanner = useAppStore((state) => state.setResetBanner);
+  const setUpdateState = useAppStore((state) => state.setUpdateState);
 
   useEffect(() => {
     if (!window.lpm) {
@@ -15,10 +16,12 @@ export function useBridgeLifecycle(): void {
       void handleConnection(state);
     });
     const stopReset = window.lpm.onProfileMayHaveReset(() => setResetBanner(true));
+    const stopUpdates = window.lpm.onUpdateState(setUpdateState);
     void initialize();
     return () => {
       stopConnection();
       stopReset();
+      stopUpdates();
     };
-  }, [handleConnection, initialize, setResetBanner]);
+  }, [handleConnection, initialize, setResetBanner, setUpdateState]);
 }

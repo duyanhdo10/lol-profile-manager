@@ -1,0 +1,25 @@
+.control {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgb(120 196 193 / 12%);
+  border-radius: 12px;
+  background: rgb(11 31 40 / 70%);
+}
+
+.control > :first-child {
+  margin-bottom: 6px;
+}
+
+.controlCopy {
+  min-width: 0;
+  flex: 1;
+}
+
+.control[data-status='downloaded'] {
+  border-color: rgb(85 214 169 / 32%);
+  background: rgb(23 90 73 / 22%);
+}
+
+.control[data-status='error'] {
+  border-color: rgb(250 176 5 / 28%);
+}
