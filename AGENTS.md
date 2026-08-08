@@ -89,24 +89,32 @@ Do not claim a check passed unless it was actually run. Report any check that co
 
 ## Packaging and release workflow
 
-1. Update the version in both `package.json` and `package-lock.json`.
-2. Run `npm.cmd run verify` and the relevant E2E tests.
-3. Run `npm.cmd run package` after all source and asset changes.
-4. Confirm the installer in `release/` has a new timestamp and expected version.
+1. Develop each feature on a dedicated branch such as `feat/auto-update`; keep conventional commits focused.
+2. Update the version in both `package.json` and `package-lock.json` and add bilingual notes at
+   `release-notes/v<version>.md`.
+3. Run `npm.cmd run verify`, `npm.cmd run test:e2e`, and `npm.cmd run package`.
+4. Confirm the installer, `latest.yml`, and `.exe.blockmap` in `release/` have the expected version and new
+   timestamps.
 5. Confirm the bundled logo hash matches the source logo and translated resources exist in the production
    bundle.
-6. Commit and push the source before tagging. The tag must point to the release commit.
-7. Create a new semantic version tag and GitHub Release. Prefer a new beta version such as
-   `v0.1.0-beta.2` over silently replacing a release users may already have downloaded.
-8. Upload `release/LoL Profile Manager Setup <version>.exe` and verify GitHub reports the expected size and
-   SHA-256 digest.
+6. Merge the feature branch back with `--no-ff` so its focused commits remain visible, then push the source.
+7. Tag the merge/release commit with `v<version>` and push the tag. The tag-triggered Release workflow verifies,
+   builds, uploads to a draft, validates update artifacts, and publishes an official/latest GitHub Release.
+8. Confirm GitHub lists the installer, `latest.yml`, and `.exe.blockmap` with names matching the metadata.
 
 The generated `release/`, `dist/`, and `dist-electron/` contents are build outputs and must not be committed.
-Replacing a GitHub asset does not update already installed copies; users must install the new build unless an
-auto-update mechanism is explicitly added later.
+Never replace an asset from an existing release. Installed versions starting at v0.1.0-beta.3 discover future
+releases through `electron-updater`; earlier versions require one manual installer upgrade.
+
+The updater is enabled only in packaged builds and can be disabled with `LPM_DISABLE_UPDATER=1` for E2E. It
+downloads automatically but must keep `autoInstallOnAppQuit` disabled and install only after explicit user
+confirmation. Do not add a GitHub token to the application. Beta installers are currently unsigned; retain the
+SHA-512 update metadata and document the SmartScreen limitation until code signing is introduced.
 
 ## Git and change safety
 
+- Start each independent feature from an updated `main` on its own `feat/*`, `fix/*`, or `docs/*` branch.
+- Prefer conventional commit subjects and merge completed feature branches into `main` with `--no-ff`.
 - Preserve unrelated user changes in a dirty worktree.
 - Do not use destructive Git commands such as `git reset --hard` or discard files without explicit approval.
 - Keep commits focused and use clear conventional-style messages where practical.
