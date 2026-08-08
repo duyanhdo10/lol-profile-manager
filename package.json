@@ -1,7 +1,7 @@
 {
   "name": "lol-profile-manager",
   "productName": "LoL Profile Manager",
-  "version": "0.1.0-beta.4",
+  "version": "0.1.0-beta.5",
   "description": "A secure Windows profile and social appearance manager for the League Client",
   "author": "LoL Profile Manager contributors",
   "license": "MIT",
@@ -89,7 +89,8 @@
     "files": [
       "dist/renderer/**/*",
       "dist-electron/**/*",
-      "src/assets/logo.png",
+      "src/assets/icon.png",
+      "src/assets/icon.ico",
       "package.json"
     ],
     "directories": {
@@ -105,12 +106,14 @@
           ]
         }
       ],
-      "icon": "src/assets/logo.png",
+      "icon": "src/assets/icon.ico",
       "artifactName": "LoL-Profile-Manager-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
+      "installerIcon": "src/assets/icon.ico",
+      "uninstallerIcon": "src/assets/icon.ico",
       "shortcutName": "LoL Profile Manager",
       "uninstallDisplayName": "LoL Profile Manager"
     },

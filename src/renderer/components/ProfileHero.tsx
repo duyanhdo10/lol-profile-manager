@@ -1,6 +1,6 @@
 import { Avatar, Badge, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import logoUrl from '../../assets/logo.png';
+import logoUrl from '../../assets/icon.png';
 import type {
   ProfileIdentity,
   RankedQueueSnapshotMap,
