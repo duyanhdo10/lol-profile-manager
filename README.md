@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="src/assets/logo.png" alt="LoL Profile Manager logo" width="180" />
+  <img src="src/assets/icon.png" alt="LoL Profile Manager logo" width="180" />
 </p>
 
 <h1 align="center">LoL Profile Manager</h1>

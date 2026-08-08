@@ -59,14 +59,15 @@ Repository: `https://github.com/duyanhdo10/lol-profile-manager`
 
 ## Branding and logo
 
-- `src/assets/logo.png` is the single source of truth for the application logo.
-- The renderer navbar, fallback profile image, HTML favicon, Electron window, and electron-builder config must
-  continue to reference that file (directly or through Vite's generated asset).
+- `src/assets/icon.png` and `src/assets/icon.ico` are the source-of-truth application logo pair. They must show
+  the same artwork: PNG for renderer/README and ICO for Windows/Electron packaging.
+- The renderer navbar and fallback profile image must reference `icon.png`. The HTML favicon, Electron window,
+  executable, installer, and uninstaller must reference `icon.ico`.
 - Do not restore the old `LPM` text mark or show a hardcoded version/catalog badge in the navigation/header.
 - After changing the logo, always rebuild the renderer and installer. A source commit alone does not update a
   previously generated `.exe`.
-- Verify that the Vite-generated `dist/renderer/assets/logo-*.png` hash matches `src/assets/logo.png` before
-  publishing the installer.
+- Verify that the Vite-generated `dist/renderer/assets/icon-*.png` hash matches `src/assets/icon.png` and that
+  the packaged Windows resources use `src/assets/icon.ico` before publishing the installer.
 
 ## Required verification
 

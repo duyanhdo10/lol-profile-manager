@@ -23,7 +23,7 @@ import {
 } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { NavLink, Outlet, useLocation } from 'react-router';
-import logoUrl from '../../assets/logo.png';
+import logoUrl from '../../assets/icon.png';
 import { ApplyBar } from '../components/ApplyBar';
 import { ReviewModal } from '../components/ReviewModal';
 import { UpdateBanner, UpdateControl, UpdateRestartModal } from '../components/UpdateStatus';
