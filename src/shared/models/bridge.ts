@@ -2,6 +2,7 @@ import type { ApplyPreview, ApplyProfileResult } from './apply';
 import type { CatalogRequest, CatalogSnapshot, InventorySnapshot } from './catalog';
 import type { ProfileDraft, ProfileState } from './profile';
 import type { ClientLocale, ConnectionState } from './session';
+import type { UpdateState } from './update';
 
 export interface IpcErrorPayload {
   code: string;
@@ -28,6 +29,10 @@ export interface LcuBridge {
   getClientLocale(): Promise<ClientLocale | null>;
   onConnectionState(listener: (state: ConnectionState) => void): () => void;
   onProfileMayHaveReset(listener: () => void): () => void;
+  getUpdateState(): Promise<UpdateState>;
+  checkForUpdates(): Promise<UpdateState>;
+  installUpdate(): Promise<void>;
+  onUpdateState(listener: (state: UpdateState) => void): () => void;
   readProfile(): Promise<ProfileState>;
   readInventory(): Promise<InventorySnapshot>;
   getCatalog(request: CatalogRequest): Promise<CatalogSnapshot>;

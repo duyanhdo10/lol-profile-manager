@@ -9,6 +9,7 @@ import {
 } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { autoUpdater } from 'electron-updater';
 import type { CatalogSnapshot } from '../src/shared/models';
 import { AppLogger } from './app-logger';
 import { CatalogService } from './catalog-service';
@@ -16,6 +17,7 @@ import { migrateLegacyCompatibility } from './compatibility-migration';
 import { CompatibilityStore } from './compatibility-store';
 import { registerApplicationIpc } from './ipc-registration';
 import { LcuClient } from './lcu-client';
+import { UpdateService } from './update-service';
 
 const serve = process.argv.includes('--serve');
 const rendererUrl = serve
@@ -23,6 +25,7 @@ const rendererUrl = serve
   : pathToFileURL(path.join(__dirname, '..', '..', 'dist', 'renderer', 'index.html')).toString();
 let mainWindow: BrowserWindow | null = null;
 let appLogger: AppLogger | null = null;
+let updateCheckTimer: NodeJS.Timeout | null = null;
 const IMAGE_HOSTS = new Set(['raw.communitydragon.org']);
 
 protocol.registerSchemesAsPrivileged([
@@ -127,12 +130,19 @@ async function initialize(): Promise<void> {
   const lcu = new LcuClient(app.getAppPath());
   const catalog = new CatalogService(userData);
   const compatibility = new CompatibilityStore(userData);
+  const updates = new UpdateService(autoUpdater, {
+    enabled: app.isPackaged && process.env['LPM_DISABLE_UPDATER'] !== '1',
+    logger: appLogger,
+  });
+  updates.onState((state) => mainWindow?.webContents.send('update:state', state));
+  updates.start();
   registerApplicationIpc({
     trustedSender,
     getLogger: () => appLogger,
     lcu,
     catalog,
     compatibility,
+    updates,
     proxyCatalogImages,
   });
 
@@ -143,6 +153,9 @@ async function initialize(): Promise<void> {
   lcu.on('reconnected', () => mainWindow?.webContents.send('profile:may-have-reset'));
   lcu.start();
   createWindow();
+  if (updates.getState().status !== 'disabled') {
+    updateCheckTimer = setTimeout(() => void updates.checkForUpdates(), 5_000);
+  }
 }
 
 function proxyCatalogImages(snapshot: CatalogSnapshot): CatalogSnapshot {
@@ -181,4 +194,7 @@ else {
 }
 
 app.on('window-all-closed', () => app.quit());
-app.on('will-quit', () => globalShortcut.unregisterAll());
+app.on('will-quit', () => {
+  if (updateCheckTimer) clearTimeout(updateCheckTimer);
+  globalShortcut.unregisterAll();
+});

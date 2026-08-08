@@ -11,6 +11,7 @@ import type { AppLogger } from './app-logger';
 import type { CatalogService } from './catalog-service';
 import type { CompatibilityStore } from './compatibility-store';
 import type { LcuClient } from './lcu-client';
+import { UpdateServiceError, type UpdateService } from './update-service';
 import { validateDraft } from './validation';
 
 const ERROR_MARKER = 'LPM_IPC_ERROR:';
@@ -23,10 +24,12 @@ interface IpcRegistrationOptions {
   lcu: LcuClient;
   catalog: CatalogService;
   compatibility: CompatibilityStore;
+  updates: UpdateService;
   proxyCatalogImages(snapshot: CatalogSnapshot): CatalogSnapshot;
 }
 
 function errorCode(channel: string, error: unknown): string {
+  if (error instanceof UpdateServiceError) return error.code;
   if (error instanceof Error && /not connected/i.test(error.message)) return 'LCU_DISCONNECTED';
   return channel === 'catalog:get' ? 'CATALOG_UNAVAILABLE' : 'REQUEST_FAILED';
 }
@@ -104,6 +107,9 @@ export function registerApplicationIpc(options: IpcRegistrationOptions): void {
 
   register('connection:get', () => options.lcu.getState());
   register('locale:get-client', () => options.lcu.getClientLocale());
+  register('update:get-state', () => options.updates.getState());
+  register('update:check', () => options.updates.checkForUpdates());
+  register('update:install', () => options.updates.installUpdate());
   register('profile:read', () => options.lcu.readProfile());
   register('inventory:read', () => options.lcu.readInventory());
   register('catalog:get', (_event, request) => {
