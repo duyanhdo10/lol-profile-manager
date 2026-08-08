@@ -1,0 +1,71 @@
+:root {
+  color-scheme: dark;
+  font-synthesis: none;
+
+  --lpm-bg: #061019;
+  --lpm-surface: #0a1922;
+  --lpm-surface-raised: #102630;
+  --lpm-accent: #55bdb3;
+  --lpm-accent-bright: #55c9bf;
+  --lpm-gold: #a98a38;
+  --lpm-text: #eff9fa;
+  --lpm-muted: #8ea2aa;
+  --lpm-border: rgb(120 196 193 / 12%);
+
+  background: var(--lpm-bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  background: var(--lpm-bg);
+}
+
+body {
+  min-width: 1080px;
+  overflow-x: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  color: #f3ffff;
+  background: rgb(48 180 170 / 38%);
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #08151d;
+  border-radius: 10px;
+  background: #29434c;
+}
+
+::-webkit-scrollbar-track {
+  background: #08151d;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

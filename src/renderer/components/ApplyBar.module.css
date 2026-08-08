@@ -1,0 +1,17 @@
+.bar {
+  position: fixed;
+  z-index: 150;
+  right: 0;
+  bottom: 0;
+  left: 272px;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 28px;
+  border-top: 1px solid rgb(120 196 193 / 15%);
+  background: rgb(7 19 28 / 96%);
+  box-shadow: 0 -18px 40px rgb(0 0 0 / 20%);
+  backdrop-filter: blur(18px);
+}

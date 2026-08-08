@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "noPropertyAccessFromIndexSignature": false,
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": [
+    "src/renderer/**/*.ts",
+    "src/renderer/**/*.tsx",
+    "src/shared/**/*.ts",
+    "tests/renderer/**/*.ts",
+    "tests/renderer/**/*.tsx",
+    "vite.config.mts",
+    "vitest.config.mts"
+  ]
+}

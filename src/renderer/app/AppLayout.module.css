@@ -1,0 +1,126 @@
+.shell {
+  background: var(--lpm-bg);
+}
+
+.navbar {
+  border-right: 1px solid rgb(120 196 193 / 12%);
+  background: linear-gradient(180deg, #091923 0%, #07131c 65%, #050d14 100%);
+}
+
+.brand {
+  min-height: 82px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgb(120 196 193 / 10%);
+}
+
+.brandMark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  overflow: hidden;
+  border: 1px solid var(--lpm-gold);
+  border-radius: 12px;
+  background: #07131c;
+  box-shadow:
+    inset 0 0 20px rgb(198 157 47 / 12%),
+    0 8px 24px rgb(0 0 0 / 30%);
+}
+
+.brandMark img {
+  width: 70px;
+  height: 70px;
+  max-width: none;
+  display: block;
+  object-fit: cover;
+  transform: translate(-15px, -15px);
+}
+
+.navigation {
+  padding: 22px 14px;
+}
+
+.navItem {
+  border-radius: 10px;
+  color: var(--lpm-muted);
+}
+
+.navItem[data-active] {
+  color: #ddf7f2;
+  background: linear-gradient(90deg, rgb(38 142 135 / 25%), rgb(38 142 135 / 6%));
+  box-shadow: inset 3px 0 #43b7ad;
+}
+
+.navFooter {
+  margin-top: auto;
+  padding: 16px;
+}
+
+.connectionCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid rgb(120 196 193 / 12%);
+  border-radius: 12px;
+  background: rgb(11 31 40 / 70%);
+  text-transform: capitalize;
+}
+
+.connectionDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #718089;
+  box-shadow: 0 0 0 4px rgb(113 128 137 / 10%);
+}
+
+.connectionCard[data-state='connected'] .connectionDot {
+  background: #55d6a9;
+  box-shadow:
+    0 0 0 4px rgb(85 214 169 / 12%),
+    0 0 16px rgb(85 214 169 / 60%);
+}
+
+.connectionCard[data-state='incompatible'] .connectionDot {
+  background: #ff6b6b;
+}
+
+.header {
+  left: 272px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-bottom: 1px solid rgb(120 196 193 / 10%);
+  background: rgb(6 16 25 / 92%);
+  backdrop-filter: blur(18px);
+}
+
+.header h2 {
+  font-size: 23px;
+  color: var(--lpm-text);
+}
+
+.eyebrow {
+  color: var(--lpm-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+}
+
+.main {
+  min-height: 100vh;
+  padding-bottom: 88px;
+  background: radial-gradient(circle at 92% -8%, rgb(23 114 118 / 16%), transparent 32%), var(--lpm-bg);
+}
+
+.content {
+  padding: 24px 28px 34px;
+}
+
+@media (width <= 62em) {
+  .content {
+    padding: 18px;
+  }
+}

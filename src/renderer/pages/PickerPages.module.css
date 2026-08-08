@@ -1,0 +1,59 @@
+.catalogPanel {
+  height: calc(100vh - 194px);
+  min-height: 520px;
+  border: 1px solid rgb(120 196 193 / 12%);
+  background: rgb(8 23 32 / 86%);
+}
+
+.eyebrow {
+  color: var(--lpm-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+.selectionPanel {
+  position: sticky;
+  top: 105px;
+  min-height: 520px;
+  padding: 22px;
+  border: 1px solid rgb(120 196 193 / 12%);
+  background: linear-gradient(165deg, rgb(15 39 48 / 96%), rgb(7 20 29 / 96%));
+}
+
+.iconStage {
+  min-height: 250px;
+  display: grid;
+  place-items: center;
+  margin: 22px 0;
+  border: 1px solid rgb(205 177 93 / 25%);
+  border-radius: 18px;
+  color: #4e6871;
+  background: radial-gradient(circle, rgb(36 91 91 / 34%), rgb(5 17 24 / 80%) 68%);
+}
+
+.iconStage img {
+  width: 158px;
+  height: 158px;
+  border: 3px solid var(--lpm-gold);
+  border-radius: 28px;
+  box-shadow: 0 22px 55px rgb(0 0 0 / 50%);
+}
+
+.backgroundHero {
+  min-height: 245px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 28px;
+  border: 1px solid rgb(120 196 193 / 13%);
+  background-color: var(--lpm-surface);
+  background-image: linear-gradient(90deg, rgb(4 13 21 / 95%), rgb(4 13 21 / 24%)), var(--background-image);
+  background-position: center;
+  background-size: cover;
+}
+
+.backgroundHero + .catalogPanel {
+  height: calc(100vh - 470px);
+  min-height: 390px;
+}

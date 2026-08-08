@@ -1,0 +1,16 @@
+.actionCard {
+  min-height: 178px;
+  border: 1px solid rgb(120 196 193 / 12%);
+  background: linear-gradient(145deg, rgb(17 40 50 / 86%), rgb(8 23 32 / 94%));
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.actionCard:hover {
+  transform: translateY(-3px);
+  border-color: rgb(76 190 179 / 48%);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 24%);
+}
