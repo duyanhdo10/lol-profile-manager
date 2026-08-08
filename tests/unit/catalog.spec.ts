@@ -191,6 +191,35 @@ describe('CommunityDragon catalog normalization', () => {
     expect(overlayCompatibility([item], '16.15.124', records)[0]?.compatibility).toBe('unknown');
   });
 
+  it('matches banner ownership by LCU item ID and ignores ambiguous showcase rejection records', async () => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'lpt-catalog-'));
+    roots.push(root);
+    const result = await new CatalogService(root, async () => normalizeCatalog(inputs())).get(
+      true,
+      {
+        iconIds: null,
+        skinIds: null,
+        titleContentIds: ['title-one'],
+        challengeIds: [101],
+        regaliaContentIds: ['3'],
+      },
+      '16.15.99',
+      [
+        {
+          clientVersion: '16.15.99',
+          field: 'challengeShowcase',
+          itemId: '3',
+          compatible: false,
+          checkedAt: '',
+        },
+      ],
+    );
+
+    expect(result.titles[0]?.ownership).toBe('owned');
+    expect(result.tokens[0]?.ownership).toBe('owned');
+    expect(result.regalia[0]).toMatchObject({ id: '3', ownership: 'owned', compatibility: 'unknown' });
+  });
+
   it('replaces a v2 cache with v3 and keeps last-known-good v3 when offline', async () => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'lpt-catalog-'));
     roots.push(root);

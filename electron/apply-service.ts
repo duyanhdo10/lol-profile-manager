@@ -231,7 +231,7 @@ export class ApplyService {
       step.attempted = true;
       const value = draftValue(draft, before, step.field);
       try {
-        await this.applyField(step.field, value, inventory);
+        await this.applyField(step.field, value, inventory, catalog);
         step.succeeded = true;
         completed.push(step);
         for (const item of compatibilityKeys(step.field, value)) {
@@ -240,7 +240,12 @@ export class ApplyService {
       } catch (error: unknown) {
         failed = true;
         step.error = message(error);
-        if (error instanceof LcuError && error.status >= 400 && error.status < 500) {
+        if (
+          step.field !== 'challengeShowcase' &&
+          error instanceof LcuError &&
+          error.status >= 400 &&
+          error.status < 500
+        ) {
           for (const item of compatibilityKeys(step.field, value)) {
             await this.compatibility.record(this.lcu.getClientVersion(), step.field, item, false);
           }
@@ -254,7 +259,7 @@ export class ApplyService {
       for (const step of [...completed].reverse()) {
         step.rollbackAttempted = true;
         try {
-          await this.applyField(step.field, stateValue(before, step.field), inventory);
+          await this.applyField(step.field, stateValue(before, step.field), inventory, catalog);
           step.rollbackSucceeded = true;
         } catch (error: unknown) {
           step.rollbackSucceeded = false;
@@ -284,6 +289,7 @@ export class ApplyService {
     field: ProfileField,
     value: FieldValue,
     inventory: InventorySnapshot,
+    catalog: CatalogSnapshot,
   ): Promise<void> {
     if (field === 'background') {
       if (typeof value !== 'number') throw new Error('Cannot restore an empty background.');
@@ -303,8 +309,14 @@ export class ApplyService {
     if (field === 'challengeShowcase') {
       if (!value || typeof value !== 'object') throw new Error('Cannot restore an empty challenge showcase.');
       const showcase = value as ChallengeShowcase;
+      const title = showcase.titleContentId
+        ? catalog.titles.find(
+            (item) =>
+              item.contentId === showcase.titleContentId || String(item.itemId) === showcase.titleContentId,
+          )
+        : undefined;
       await this.lcu.request('POST', '/lol-challenges/v1/update-player-preferences', {
-        title: showcase.titleContentId ?? '',
+        title: title ? String(title.itemId) : (showcase.titleContentId ?? ''),
         challengeIds: showcase.tokenIds ?? [],
         bannerAccent: showcase.bannerAccent ?? '',
       });

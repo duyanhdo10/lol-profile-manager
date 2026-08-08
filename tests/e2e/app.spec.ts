@@ -56,7 +56,7 @@ test.beforeAll(async () => {
         id: 7,
         kind: 'icon',
         name: 'Offline icon',
-        imageUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBA==',
+        imageUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
         source: 'CommunityDragon',
         sourceVersion: '16.15',
         legacy: false,
@@ -104,6 +104,16 @@ test.beforeAll(async () => {
       visibility: ['Profile/hovercard'],
     })),
     rankEmblems: [
+      {
+        tier: 'IRON',
+        name: 'Iron ranked emblem',
+        imageUrl: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==',
+        source: 'CommunityDragon',
+        sourceVersion: '16.15',
+        ownership: 'unknown',
+        compatibility: 'unknown',
+        visibility: ['Profile/hovercard'],
+      },
       {
         tier: 'GOLD',
         name: 'Gold ranked emblem',
@@ -203,4 +213,25 @@ test('uses routed Showcase tabs and allows unknown assets', async () => {
   await page.getByRole('tab', { name: 'Banner' }).click();
   await page.getByRole('button', { name: /Offline banner 1 / }).click();
   await expect(page.getByText('Offline banner 1').first()).toBeVisible();
+});
+
+test('centers oversized ranked emblem artwork inside each clipped card viewport', async () => {
+  await page.getByRole('link', { name: 'Status & rank' }).click();
+  const artwork = page.locator('div[class*="rankArtwork"]').first();
+  const emblem = artwork.locator('img');
+  await expect(emblem).toBeVisible();
+  const [artworkBox, emblemBox, styles] = await Promise.all([
+    artwork.boundingBox(),
+    emblem.boundingBox(),
+    emblem.evaluate((element) => {
+      const computed = window.getComputedStyle(element);
+      return { position: computed.position, transform: computed.transform };
+    }),
+  ]);
+  expect(artworkBox).not.toBeNull();
+  expect(emblemBox).not.toBeNull();
+  expect(styles.position).toBe('absolute');
+  expect(styles.transform).not.toBe('none');
+  expect(emblemBox!.x + emblemBox!.width / 2).toBeCloseTo(artworkBox!.x + artworkBox!.width / 2, 0);
+  expect(emblemBox!.y + emblemBox!.height / 2).toBeCloseTo(artworkBox!.y + artworkBox!.height / 2, 0);
 });

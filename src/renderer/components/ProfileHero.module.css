@@ -124,9 +124,13 @@
 }
 
 .rankEmblemCrop img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 210px;
   max-width: none;
   height: auto;
+  transform: translate(-50%, -50%);
 }
 
 .rankEmblemCrop > span {

@@ -223,7 +223,9 @@
   white-space: nowrap;
 }
 
-.tokenCard:disabled {
+.listItem:disabled,
+.tokenCard:disabled,
+.bannerCard:disabled {
   opacity: 0.42;
   cursor: not-allowed;
 }

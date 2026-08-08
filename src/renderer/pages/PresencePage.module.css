@@ -38,9 +38,13 @@
 
 .previewRankArtwork img,
 .rankArtwork img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 680px;
   max-width: none;
   height: auto;
+  transform: translate(-50%, -50%);
   filter: drop-shadow(0 12px 18px rgb(0 0 0 / 42%));
 }
 

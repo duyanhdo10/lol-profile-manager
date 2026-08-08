@@ -206,7 +206,7 @@ export const en = {
     noTokens: 'No tokens match these filters.',
     noBanners: 'No banners match these filters.',
     bannerShowcaseNote:
-      'Showcase banners are challenge accent artwork; rank banner sources are controlled separately by Regalia.',
+      'Showcase banners are challenge accent artwork; rank banner sources are controlled separately by Regalia. LCU only accepts banners owned by the account.',
     profileHovercard: 'Profile / hovercard',
     lcuRegalia: 'LCU PROFILE APPEARANCE',
     crestAppearance: 'Profile crest and ranked banner',
@@ -235,7 +235,8 @@ export const en = {
     regaliaNote:
       'These three values are profile presentation preferences only. They do not change rank, account level, progression, or ownership.',
     keepRegalia: 'Keep current regalia',
-    reviewNote: 'Unowned and unknown items are called out during transaction review.',
+    reviewNote:
+      'Items confirmed as unowned cannot be selected because LCU rejects them. Unknown ownership remains selectable and is called out during review.',
     keepShowcase: 'Keep current showcase',
   },
   update: {
@@ -481,7 +482,7 @@ export const vi: typeof en = {
     noTokens: 'Không có token khớp bộ lọc.',
     noBanners: 'Không có banner khớp bộ lọc.',
     bannerShowcaseNote:
-      'Banner Showcase là nền nhấn của thử thách; nguồn banner hạng được điều khiển riêng trong Regalia.',
+      'Banner Showcase là nền nhấn của thử thách; nguồn banner hạng được điều khiển riêng trong Regalia. LCU chỉ chấp nhận banner tài khoản sở hữu.',
     profileHovercard: 'Hồ sơ / thẻ hồ sơ',
     lcuRegalia: 'DIỆN MẠO HỒ SƠ LCU',
     crestAppearance: 'Khung hồ sơ và banner xếp hạng',
@@ -509,7 +510,8 @@ export const vi: typeof en = {
     regaliaNote:
       'Ba giá trị này chỉ là tùy chọn trình bày hồ sơ. Chúng không thay đổi hạng, cấp tài khoản, tiến trình hay quyền sở hữu.',
     keepRegalia: 'Giữ huy hiệu hiện tại',
-    reviewNote: 'Vật phẩm chưa sở hữu và không rõ sẽ được nêu khi kiểm tra giao dịch.',
+    reviewNote:
+      'Vật phẩm được xác nhận chưa sở hữu sẽ không thể chọn vì LCU từ chối. Vật phẩm chưa rõ quyền sở hữu vẫn có thể chọn và sẽ được nêu khi kiểm tra.',
     keepShowcase: 'Giữ trưng bày hiện tại',
   },
   update: {
