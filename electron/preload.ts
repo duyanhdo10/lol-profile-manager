@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { ConnectionState, IpcErrorPayload, LcuBridge } from '../src/shared/models';
+import type { ConnectionState, IpcErrorPayload, LcuBridge, UpdateState } from '../src/shared/models';
 
 const ERROR_MARKER = 'LPM_IPC_ERROR:';
 
@@ -35,6 +35,14 @@ const bridge: LcuBridge = {
     const wrapped = () => listener();
     ipcRenderer.on('profile:may-have-reset', wrapped);
     return () => ipcRenderer.removeListener('profile:may-have-reset', wrapped);
+  },
+  getUpdateState: () => invoke('update:get-state'),
+  checkForUpdates: () => invoke('update:check'),
+  installUpdate: () => invoke('update:install'),
+  onUpdateState: (listener) => {
+    const wrapped = (_event: Electron.IpcRendererEvent, state: UpdateState) => listener(state);
+    ipcRenderer.on('update:state', wrapped);
+    return () => ipcRenderer.removeListener('update:state', wrapped);
   },
   readProfile: () => invoke('profile:read'),
   readInventory: () => invoke('inventory:read'),

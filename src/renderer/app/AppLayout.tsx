@@ -26,6 +26,7 @@ import { NavLink, Outlet, useLocation } from 'react-router';
 import logoUrl from '../../assets/logo.png';
 import { ApplyBar } from '../components/ApplyBar';
 import { ReviewModal } from '../components/ReviewModal';
+import { UpdateBanner, UpdateControl, UpdateRestartModal } from '../components/UpdateStatus';
 import { LanguageMenu } from '../features/settings/LanguageMenu';
 import { useBridgeLifecycle } from '../hooks/use-bridge-lifecycle';
 import { useAppStore } from '../store/app-store';
@@ -88,6 +89,7 @@ export function AppLayout() {
           ))}
         </Stack>
         <div className={styles.navFooter}>
+          <UpdateControl />
           <div className={styles.connectionCard} data-state={connection}>
             <span className={styles.connectionDot} />
             <div>
@@ -129,6 +131,7 @@ export function AppLayout() {
 
       <AppShell.Main className={styles.main} data-testid="app-root">
         <div className={styles.content}>
+          <UpdateBanner />
           {connection !== 'connected' && (
             <Alert color="blue" variant="light" icon={<IconShieldCheck size={18} />} mb="md">
               {t('alert.offline')}
@@ -174,6 +177,7 @@ export function AppLayout() {
         </div>
         <ApplyBar />
         <ReviewModal />
+        <UpdateRestartModal />
       </AppShell.Main>
     </AppShell>
   );

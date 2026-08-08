@@ -96,6 +96,7 @@ test.beforeAll(async () => {
       ...process.env,
       LPM_USER_DATA: userData,
       LPM_DISABLE_LCU: '1',
+      LPM_DISABLE_UPDATER: '1',
       LPM_DISABLE_GPU: '1',
     },
   });
@@ -121,6 +122,8 @@ test('starts with one hardened React window and a typed bridge', async () => {
     'undefined',
   );
   expect(await page.evaluate(() => typeof window.lpm.readProfile)).toBe('function');
+  expect(await page.evaluate(() => typeof window.lpm.checkForUpdates)).toBe('function');
+  expect(await page.evaluate(() => window.lpm.getUpdateState())).toEqual({ status: 'disabled' });
   await expect.poll(() => page.evaluate(() => window.lpm.getConnectionState())).toBe('disconnected');
   await expect(page.getByRole('heading', { name: 'Profile overview' })).toBeVisible();
 });

@@ -37,10 +37,23 @@ League Client social-profile appearance changes.
 - Stop on the first failed step and roll completed steps back in reverse order.
 - Browse a cache-first catalog offline with patch, ownership, compatibility, and locale-fallback indicators.
 - Use English or Vietnamese without losing ID-based draft selections.
+- Check GitHub Releases automatically, download updates in the background, and install only after you choose
+  **Restart and update**.
 
 The application does not purchase, unlock, or grant ownership of content, and it never changes gameplay or
 ranked progression. Unowned items remain available for preview, but the League Client may reject them.
 Transient status and hovercard values are never reapplied automatically after reconnecting.
+
+### Automatic updates
+
+Starting with v0.1.0-beta.3, the packaged app checks GitHub Releases shortly after launch. You can also check
+manually from the sidebar. A new installer downloads in the background, but the app never restarts or installs
+it without an explicit action. If a profile draft or review is open, the restart confirmation warns that those
+pending selections will be lost.
+
+The update client uses the release metadata and SHA-512 checksum produced by electron-builder. This beta is
+not code-signed yet, so Windows may still display a SmartScreen warning. The updater contains no GitHub token;
+release publishing uses GitHub Actions' short-lived repository token.
 
 ### Requirements and development
 
@@ -111,10 +124,22 @@ LoL Profile Manager là ứng dụng desktop mã nguồn mở cho Windows, giúp
 - Dừng ở lỗi đầu tiên và hoàn tác các bước đã hoàn thành theo thứ tự ngược.
 - Duyệt catalog cache-first khi ngoại tuyến, kèm trạng thái patch, sở hữu, tương thích và fallback ngôn ngữ.
 - Dùng tiếng Anh hoặc tiếng Việt mà không mất lựa chọn bản nháp theo ID.
+- Tự động kiểm tra GitHub Releases, tải cập nhật trong nền và chỉ cài khi bạn chọn **Khởi động lại và cập nhật**.
 
 Ứng dụng không mua, mở khóa hoặc cấp quyền sở hữu nội dung, đồng thời không thay đổi gameplay hay tiến trình
 xếp hạng. Vật phẩm chưa sở hữu vẫn có thể xem trước nhưng League Client có thể từ chối khi áp dụng. Trạng thái
 và hạng hovercard tạm thời không bao giờ được tự động áp dụng lại sau khi kết nối lại.
+
+### Cập nhật tự động
+
+Từ v0.1.0-beta.3, bản ứng dụng đã đóng gói sẽ kiểm tra GitHub Releases ngay sau khi mở. Bạn cũng có thể kiểm
+tra thủ công từ thanh bên. Bộ cài mới được tải trong nền, nhưng ứng dụng không tự khởi động lại hoặc cài đặt
+nếu chưa có thao tác xác nhận. Khi đang có bản nháp hoặc cửa sổ kiểm tra, hộp thoại khởi động lại sẽ cảnh báo
+rằng các lựa chọn chưa áp dụng sẽ bị mất.
+
+Trình cập nhật xác minh metadata phát hành và checksum SHA-512 do electron-builder tạo. Bản beta hiện chưa
+được ký mã nên Windows vẫn có thể hiển thị cảnh báo SmartScreen. Ứng dụng không chứa GitHub token; quá trình
+phát hành dùng token kho lưu trữ ngắn hạn của GitHub Actions.
 
 ### Yêu cầu và phát triển
 

@@ -12,6 +12,7 @@ import type {
   ProfileDraft,
   ProfileField,
   ProfileState,
+  UpdateState,
 } from '../../shared/models';
 import { EMPTY_PROFILE } from '../../shared/models';
 import { i18n, readLocaleMode, resolveLocale, writeLocaleMode } from '../features/settings/i18n';
@@ -28,6 +29,9 @@ export interface AppState {
   catalogBusy: boolean;
   error: IpcErrorPayload | null;
   resetBanner: boolean;
+  update: UpdateState;
+  updateBannerDismissed: boolean;
+  updateInstallConfirmOpened: boolean;
   localeMode: LocaleMode;
   locale: AppLocale;
   initialize(): Promise<void>;
@@ -46,6 +50,12 @@ export interface AppState {
   closePreview(): void;
   dismissError(): void;
   setResetBanner(value: boolean): void;
+  setUpdateState(update: UpdateState): void;
+  checkForUpdates(): Promise<void>;
+  requestInstallUpdate(): Promise<void>;
+  confirmInstallUpdate(): Promise<void>;
+  closeInstallUpdateConfirm(): void;
+  dismissUpdateBanner(): void;
 }
 
 function appError(error: unknown, fallbackCode = 'REQUEST_FAILED'): IpcErrorPayload {
@@ -79,6 +89,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   catalogBusy: false,
   error: null,
   resetBanner: false,
+  update: { status: 'idle' },
+  updateBannerDismissed: false,
+  updateInstallConfirmOpened: false,
   localeMode: initialMode,
   locale: initialLocale,
 
@@ -94,7 +107,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         return;
       }
       try {
-        const connection = await window.lpm.getConnectionState();
+        const [connection, update] = await Promise.all([
+          window.lpm.getConnectionState(),
+          window.lpm.getUpdateState(),
+        ]);
+        get().setUpdateState(update);
         get().setConnection(connection);
         await get().syncAutoLocale();
         await Promise.all([
@@ -280,6 +297,62 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   setResetBanner(resetBanner) {
     set({ resetBanner });
+  },
+  setUpdateState(update) {
+    set((state) => ({
+      update,
+      updateBannerDismissed:
+        update.status === 'downloaded' && state.update.status !== 'downloaded'
+          ? false
+          : state.updateBannerDismissed,
+    }));
+  },
+  async checkForUpdates() {
+    try {
+      get().setUpdateState(await window.lpm.checkForUpdates());
+    } catch {
+      get().setUpdateState({
+        status: 'error',
+        checkedAt: new Date().toISOString(),
+        errorCode: 'UPDATE_CHECK_FAILED',
+      });
+    }
+  },
+  async requestInstallUpdate() {
+    const { busy, draft, preview } = get();
+    if (busy || get().update.status !== 'downloaded') return;
+    if (Object.keys(draft).length > 0 || preview) {
+      set({ updateInstallConfirmOpened: true });
+      return;
+    }
+    try {
+      await window.lpm.installUpdate();
+    } catch {
+      get().setUpdateState({
+        ...get().update,
+        status: 'error',
+        errorCode: 'UPDATE_NOT_READY',
+      });
+    }
+  },
+  async confirmInstallUpdate() {
+    if (get().busy) return;
+    set({ updateInstallConfirmOpened: false });
+    try {
+      await window.lpm.installUpdate();
+    } catch {
+      get().setUpdateState({
+        ...get().update,
+        status: 'error',
+        errorCode: 'UPDATE_NOT_READY',
+      });
+    }
+  },
+  closeInstallUpdateConfirm() {
+    set({ updateInstallConfirmOpened: false });
+  },
+  dismissUpdateBanner() {
+    set({ updateBannerDismissed: true });
   },
 }));
 
