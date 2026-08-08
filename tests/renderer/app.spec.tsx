@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { MantineProvider } from '@mantine/core';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -47,6 +47,10 @@ function bridge(): LcuBridge {
     getClientLocale: vi.fn(async () => null),
     onConnectionState: vi.fn(() => () => undefined),
     onProfileMayHaveReset: vi.fn(() => () => undefined),
+    getUpdateState: vi.fn(async () => ({ status: 'disabled' as const })),
+    checkForUpdates: vi.fn(async () => ({ status: 'upToDate' as const })),
+    installUpdate: vi.fn(async () => undefined),
+    onUpdateState: vi.fn(() => () => undefined),
     readProfile: vi.fn(async () => structuredClone(EMPTY_PROFILE)),
     readInventory: vi.fn(async () => ({
       iconIds: null,
@@ -62,6 +66,7 @@ function bridge(): LcuBridge {
 }
 
 beforeEach(() => {
+  cleanup();
   resetAppStoreCoordinatorsForTests();
   window.lpm = bridge();
   useAppStore.setState({
@@ -76,6 +81,9 @@ beforeEach(() => {
     catalogBusy: false,
     error: null,
     resetBanner: false,
+    update: { status: 'disabled' },
+    updateBannerDismissed: false,
+    updateInstallConfirmOpened: false,
     localeMode: 'auto',
     locale: 'en_US',
   });
@@ -141,5 +149,39 @@ describe('React application shell', () => {
     useAppStore.setState({ draft: { iconId: 7, challengeShowcase: { tokenIds: [1, 2, 3] } } });
     useAppStore.getState().clearField('challengeShowcase');
     expect(useAppStore.getState().draft).toEqual({ iconId: 7 });
+  });
+
+  it('asks for confirmation before restarting when a profile draft exists', async () => {
+    const user = userEvent.setup();
+    const lpm = bridge();
+    window.lpm = lpm;
+
+    render(
+      <MantineProvider>
+        <MemoryRouter initialEntries={['/overview']}>
+          <AppRouter />
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+
+    await screen.findByRole('heading', { name: 'Profile overview' });
+    act(() => {
+      useAppStore.setState({
+        draft: { iconId: 7 },
+        update: {
+          status: 'downloaded',
+          availableVersion: '0.1.0-beta.3',
+          percent: 100,
+        },
+      });
+    });
+
+    const restartButtons = await screen.findAllByRole('button', { name: 'Restart and update' });
+    await user.click(restartButtons[0]);
+    expect(screen.getAllByRole('heading', { name: 'Restart to update?' })).not.toHaveLength(0);
+    expect(lpm.installUpdate).not.toHaveBeenCalled();
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Restart and update' }));
+    await waitFor(() => expect(lpm.installUpdate).toHaveBeenCalledTimes(1));
   });
 });
