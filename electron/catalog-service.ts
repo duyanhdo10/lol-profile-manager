@@ -563,27 +563,9 @@ export class CatalogService {
       clientVersion,
       compatibility,
     );
-    const titles = overlayCompatibleBy(
-      overlayOwnedBy(snapshot.titles, inventory.titleContentIds, (item) => item.contentId),
-      clientVersion,
-      compatibility,
-      'challengeShowcase',
-      (item) => item.contentId,
-    );
-    const tokens = overlayCompatibleBy(
-      overlayOwnedBy(snapshot.tokens, inventory.challengeIds, (item) => item.id),
-      clientVersion,
-      compatibility,
-      'challengeShowcase',
-      (item) => item.id,
-    );
-    const regalia = overlayCompatibleBy(
-      overlayOwnedBy(snapshot.regalia, inventory.regaliaContentIds, (item) => item.contentId),
-      clientVersion,
-      compatibility,
-      'challengeShowcase',
-      (item) => item.contentId,
-    );
+    const titles = overlayOwnedBy(snapshot.titles, inventory.titleContentIds, (item) => item.contentId);
+    const tokens = overlayOwnedBy(snapshot.tokens, inventory.challengeIds, (item) => item.id);
+    const regalia = overlayOwnedBy(snapshot.regalia, inventory.regaliaContentIds, (item) => item.id);
 
     return { ...snapshot, compatible: snapshotCompatible, icons, backgrounds, titles, tokens, regalia };
   }

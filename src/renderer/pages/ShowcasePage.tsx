@@ -209,6 +209,7 @@ export function ShowcasePage() {
                   type="button"
                   className={styles.listItem}
                   data-selected={preview.showcase.titleContentId === item.contentId || undefined}
+                  disabled={item.ownership === 'unowned'}
                   onClick={() => updateShowcase({ titleContentId: item.contentId })}
                 >
                   <span className={styles.titleGlyph}>T</span>
@@ -287,7 +288,10 @@ export function ShowcasePage() {
                   type="button"
                   className={styles.tokenCard}
                   data-selected={preview.showcase.tokenIds?.includes(item.id) || undefined}
-                  disabled={preview.tokens.length >= 3 && !preview.showcase.tokenIds?.includes(item.id)}
+                  disabled={
+                    item.ownership === 'unowned' ||
+                    (preview.tokens.length >= 3 && !preview.showcase.tokenIds?.includes(item.id))
+                  }
                   onClick={() => toggleToken(item.id)}
                 >
                   <Image src={item.imageUrl} alt={item.name} />
@@ -321,6 +325,7 @@ export function ShowcasePage() {
                     preview.showcase.bannerAccent === item.contentId ||
                     undefined
                   }
+                  disabled={item.ownership === 'unowned'}
                   onClick={() => updateShowcase({ bannerAccent: item.id })}
                 >
                   <img className={styles.bannerArtwork} src={item.imageUrl} alt={item.name} />

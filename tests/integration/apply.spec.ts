@@ -159,16 +159,41 @@ describe('transactional profile apply', () => {
     },
   );
 
-  it('marks every selected showcase item not compatible after a 4xx rejection', async () => {
+  it('does not blame every selected showcase item after an ambiguous batch rejection', async () => {
     const lcu = new FakeLcu();
     lcu.failCalls.add(3);
     const { apply, records } = service(lcu);
     await apply.apply(draft);
-    expect(
-      records
-        .filter((record) => record.field === 'challengeShowcase' && !record.compatible)
-        .map((record) => record.itemId),
-    ).toEqual(['new-title', 2, 3, 4, 'new-banner']);
+    expect(records.filter((record) => record.field === 'challengeShowcase' && !record.compatible)).toEqual(
+      [],
+    );
+  });
+
+  it('maps stable title content IDs to the numeric item ID expected by LCU', async () => {
+    const lcu = new FakeLcu();
+    const catalog: CatalogSnapshot = {
+      ...emptyCatalog,
+      titles: [
+        {
+          contentId: 'new-title',
+          itemId: 50200104,
+          name: 'Current title',
+          imageUrl: '',
+          source: 'CommunityDragon',
+          sourceVersion: emptyCatalog.version,
+          ownership: 'owned',
+          compatibility: 'unknown',
+          visibility: ['Profile/hovercard'],
+        },
+      ],
+    };
+
+    await service(lcu, catalog).apply.apply({ challengeShowcase: draft.challengeShowcase });
+    expect(lcu.calls[0]?.body).toEqual({
+      title: '50200104',
+      challengeIds: [2, 3, 4],
+      bannerAccent: 'new-banner',
+    });
   });
 
   it('warns about unowned and unknown showcase selections without blocking review', async () => {

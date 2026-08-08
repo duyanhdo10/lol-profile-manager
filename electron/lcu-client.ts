@@ -44,15 +44,16 @@ interface LoginSession {
   state?: string;
 }
 
-interface ChallengeSummary {
-  preferences?: {
-    title?: string;
-    challengeIds?: number[];
-    bannerAccent?: string;
-  };
-  title?: string;
+interface ChallengePreferencesPayload {
+  title?: string | { contentId?: string; itemId?: number };
   challengeIds?: number[];
   bannerAccent?: string;
+  bannerId?: string;
+  topChallenges?: Array<{ id?: number }>;
+}
+
+interface ChallengeSummary extends ChallengePreferencesPayload {
+  preferences?: ChallengePreferencesPayload;
   challenges?: unknown;
 }
 
@@ -368,11 +369,8 @@ export class LcuClient extends EventEmitter {
       /* unknown inventory is intentionally non-blocking */
     }
     try {
-      const summary = await this.request<ChallengeSummary>(
-        'GET',
-        '/lol-challenges/v1/summary-player-data/local-player',
-      );
-      challengeIds = this.extractChallengeIds(summary.body.challenges);
+      const challenges = await this.request<unknown>('GET', '/lol-challenges/v1/challenges/local-player');
+      challengeIds = this.extractOwnedChallengeIds(challenges.body);
     } catch {
       /* unknown challenge ownership is intentionally non-blocking */
     }
@@ -383,8 +381,19 @@ export class LcuClient extends EventEmitter {
       /* unknown title ownership is intentionally non-blocking */
     }
     try {
-      const regalia = await this.request<unknown>('GET', '/lol-inventory/v2/inventory/REGALIA');
-      regaliaContentIds = this.extractStrings(regalia.body, ['contentId', 'itemId', 'id']);
+      const regalia = await this.request<
+        Array<{ itemId?: string | number; owned?: boolean; ownershipType?: string }>
+      >('GET', '/lol-inventory/v2/inventory/REGALIA_BANNER');
+      regaliaContentIds = [
+        ...new Set(
+          regalia.body.flatMap((item): string[] => {
+            if (item.owned !== true && item.ownershipType !== 'OWNED') return [];
+            return typeof item.itemId === 'string' || typeof item.itemId === 'number'
+              ? [String(item.itemId)]
+              : [];
+          }),
+        ),
+      ];
     } catch {
       /* unknown regalia ownership is intentionally non-blocking */
     }
@@ -467,18 +476,25 @@ export class LcuClient extends EventEmitter {
 
   private challengePreferences(value: ChallengeSummary): ChallengeShowcase {
     const preferences = value.preferences ?? value;
+    const title = preferences.title;
+    const titleContentId =
+      typeof title === 'string'
+        ? title
+        : typeof title === 'object' && title !== null && typeof title.contentId === 'string'
+          ? title.contentId
+          : undefined;
+    const challengeIds = Array.isArray(preferences.challengeIds)
+      ? preferences.challengeIds
+      : Array.isArray(preferences.topChallenges)
+        ? preferences.topChallenges.map((challenge) => challenge.id)
+        : [];
+    const bannerAccent = preferences.bannerAccent ?? preferences.bannerId;
     return {
-      ...(typeof preferences.title === 'string' && preferences.title
-        ? { titleContentId: preferences.title }
-        : {}),
-      tokenIds: Array.isArray(preferences.challengeIds)
-        ? preferences.challengeIds
-            .filter((id): id is number => Number.isSafeInteger(id) && id >= 0)
-            .slice(0, 3)
-        : [],
-      ...(typeof preferences.bannerAccent === 'string' && preferences.bannerAccent
-        ? { bannerAccent: preferences.bannerAccent }
-        : {}),
+      ...(titleContentId ? { titleContentId } : {}),
+      tokenIds: challengeIds
+        .filter((id): id is number => Number.isSafeInteger(id) && Number(id) >= 0)
+        .slice(0, 3),
+      ...(typeof bannerAccent === 'string' && bannerAccent ? { bannerAccent } : {}),
     };
   }
 
@@ -527,7 +543,7 @@ export class LcuClient extends EventEmitter {
     };
   }
 
-  private extractChallengeIds(value: unknown): number[] {
+  private extractOwnedChallengeIds(value: unknown): number[] {
     const entries = Array.isArray(value)
       ? value
       : typeof value === 'object' && value !== null
@@ -541,6 +557,8 @@ export class LcuClient extends EventEmitter {
           if (typeof entry === 'number' && Number.isSafeInteger(entry)) return [entry];
           if (typeof entry !== 'object' || entry === null) return [];
           const record = entry as Record<string, unknown>;
+          const currentLevel = record['currentLevel'];
+          if (typeof currentLevel !== 'string' || !currentLevel || currentLevel === 'NONE') return [];
           const id = record['id'] ?? record['challengeId'] ?? record['key'];
           const parsed = typeof id === 'string' && /^\d+$/.test(id) ? Number(id) : id;
           return typeof parsed === 'number' && Number.isSafeInteger(parsed) ? [parsed] : [];

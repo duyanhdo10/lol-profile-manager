@@ -133,6 +133,36 @@ describe('React application shell', () => {
     expect(useAppStore.getState().draft.iconId).toBe(7);
   });
 
+  it('disables confirmed unowned Showcase items', async () => {
+    useAppStore.setState({
+      catalog: {
+        ...catalog,
+        titles: [
+          {
+            contentId: 'locked-title',
+            itemId: 1,
+            name: 'Locked title',
+            imageUrl: '',
+            source: 'CommunityDragon',
+            sourceVersion: '16.15',
+            ownership: 'unowned',
+            compatibility: 'unknown',
+            visibility: ['Profile/hovercard'],
+          },
+        ],
+      },
+    });
+    render(
+      <MantineProvider>
+        <MemoryRouter initialEntries={['/showcase']}>
+          <AppRouter />
+        </MemoryRouter>
+      </MantineProvider>,
+    );
+
+    expect(await screen.findByRole('button', { name: /Locked title/ })).toBeDisabled();
+  });
+
   it('redirects unknown routes to overview', async () => {
     render(
       <MantineProvider>
